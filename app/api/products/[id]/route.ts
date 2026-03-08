@@ -3,11 +3,12 @@ import { prisma } from '@/lib/prisma'
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     await prisma.product.delete({
-      where: { id: parseInt(params.id) }
+      where: { id: parseInt(id) }
     })
     return NextResponse.json({ message: 'Product deleted' })
   } catch (error) {
