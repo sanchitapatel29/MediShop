@@ -17,6 +17,7 @@ model User {
   hospital_name String?
   created_at    DateTime @default(now())
   orders        Order[]
+  productRequests ProductRequest[]
 }
 
 model Product {
@@ -49,4 +50,16 @@ model OrderItem {
   price      Float
   order      Order   @relation(fields: [order_id], references: [id])
   product    Product @relation(fields: [product_id], references: [id])
+}
+
+model ProductRequest {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  name        String
+  description String
+  quantity    Int
+  urgency     String   @default("normal")
+  status      String   @default("pending")
+  created_at  DateTime @default(now())
+  user        User     @relation(fields: [user_id], references: [id])
 }

@@ -84,10 +84,18 @@ export default function Products() {
 
       <div className="max-w-7xl mx-auto px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-1">Product Catalog</h1>
-          <p className="text-white/40">Browse certified medical equipment</p>
-        </div>
+        <div className="flex justify-between items-center mb-8">
+  <div>
+    <h1 className="text-3xl font-bold mb-1">Product Catalog</h1>
+    <p className="text-white/40">Browse certified medical equipment</p>
+  </div>
+  <button
+    onClick={() => router.push('/request')}
+    className="bg-white/5 border border-white/10 hover:border-blue-500/50 text-white px-5 py-3 rounded-xl text-sm font-medium transition"
+  >
+    + Request a Product
+  </button>
+</div>
 
         {/* Search and Filter */}
         <div className="flex gap-4 mb-6">

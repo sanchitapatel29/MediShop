@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Cookies from 'js-cookie'
 
 interface Product {
   id: number
@@ -13,6 +14,7 @@ interface Product {
 export default function Admin() {
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
+  const [requests, setRequests] = useState<any[]>([])
   const [formData, setFormData] = useState({
     name: '', category: '', description: '',
     price: '', stock: '', certification: ''
@@ -25,7 +27,21 @@ export default function Admin() {
       .then(data => setProducts(data))
   }
 
-  useEffect(() => { fetchProducts() }, [])
+  const fetchRequests = () => {
+    const token = Cookies.get('token')
+    if (token) {
+      fetch('/api/requests', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => setRequests(data))
+    }
+  }
+
+  useEffect(() => {
+    fetchProducts()
+    fetchRequests()
+  }, [])
 
   const handleAddProduct = async () => {
     const res = await fetch('/api/products', {
@@ -177,6 +193,38 @@ export default function Admin() {
                 ))
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Product Requests */}
+        <div className="mt-8 bg-white/5 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-xl font-bold mb-6">Product Requests ({requests.length})</h2>
+          <div className="space-y-3">
+            {requests.length === 0 ? (
+              <p className="text-white/40 text-center py-8">No requests yet</p>
+            ) : (
+              requests.map((req: any) => (
+                <div key={req.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold text-white">{req.name}</p>
+                      <p className="text-white/40 text-sm mt-1">{req.description}</p>
+                      <p className="text-white/30 text-xs mt-2">
+                        By {req.user.name} ({req.user.hospital_name || req.user.email}) · Qty: {req.quantity}
+                      </p>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                      req.urgency === 'urgent' ? 'bg-red-500/20 text-red-400 border-red-500/20' :
+                      req.urgency === 'high' ? 'bg-orange-500/20 text-orange-400 border-orange-500/20' :
+                      req.urgency === 'normal' ? 'bg-blue-500/20 text-blue-400 border-blue-500/20' :
+                      'bg-white/10 text-white/40 border-white/10'
+                    }`}>
+                      {req.urgency.charAt(0).toUpperCase() + req.urgency.slice(1)}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
