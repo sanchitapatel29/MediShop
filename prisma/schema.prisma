@@ -33,13 +33,15 @@ model Product {
 }
 
 model Order {
-  id          Int         @id @default(autoincrement())
-  user_id     Int
-  total_price Float
-  status      String      @default("pending")
-  created_at  DateTime    @default(now())
-  user        User        @relation(fields: [user_id], references: [id])
-  items       OrderItem[]
+  id           Int         @id @default(autoincrement())
+  user_id      Int
+  total_price  Float
+  amount_paid  Float       @default(0)
+  payment_type String      @default("full")
+  status       String      @default("pending")
+  created_at   DateTime    @default(now())
+  user         User        @relation(fields: [user_id], references: [id])
+  items        OrderItem[]
 }
 
 model OrderItem {

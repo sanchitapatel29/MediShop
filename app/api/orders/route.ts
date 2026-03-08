@@ -5,17 +5,19 @@ import jwt from 'jsonwebtoken'
 export async function POST(request: Request) {
   try {
     const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number }
-    const { items, totalPrice } = await request.json()
+    const { items, totalPrice, paymentType } = await request.json()
+
+    const amountPaid = paymentType === 'split' ? totalPrice * 0.6 : totalPrice
 
     const order = await prisma.order.create({
       data: {
         user_id: decoded.userId,
         total_price: totalPrice,
+        amount_paid: amountPaid,
+        payment_type: paymentType || 'full',
         status: 'pending',
         items: {
           create: items.map((item: { productId: number, quantity: number, price: number }) => ({
@@ -27,7 +29,7 @@ export async function POST(request: Request) {
       }
     })
 
-    // Reduce stock for each item
+    // Reduce stock
     for (const item of items) {
       await prisma.product.update({
         where: { id: item.productId },
@@ -44,18 +46,14 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number }
 
     const orders = await prisma.order.findMany({
       where: { user_id: decoded.userId },
       include: {
-        items: {
-          include: { product: true }
-        }
+        items: { include: { product: true } }
       },
       orderBy: { created_at: 'desc' }
     })
