@@ -87,7 +87,7 @@ export default function Cart() {
         </button>
       </nav>
 
-      <div className="max-w-3xl mx-auto px-8 py-8">
+      <div className="max-w-3xl mx-auto px-4 md:px-8 py-6 md:py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-1">Your Cart</h1>
           <p className="text-white/40">
@@ -117,13 +117,13 @@ export default function Cart() {
             {cart.map((item) => (
               <div
                 key={item.id}
-                className="bg-white/5 border border-white/10 rounded-2xl p-6 flex justify-between items-center"
+                className="bg-white/5 border border-white/10 rounded-2xl p-4 md:p-6 flex flex-col md:flex-row justify-between gap-4"
               >
                 <div>
                   <h3 className="font-semibold text-white mb-1">{item.name}</h3>
                   <p className="text-blue-400 text-sm">₹{item.price} each</p>
                 </div>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center justify-between md:gap-6">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -141,7 +141,7 @@ export default function Cart() {
                       +
                     </button>
                   </div>
-                  <p className="font-bold text-white w-24 text-right">
+                  <p className="font-bold text-white">
                     ₹{(item.price * item.quantity).toLocaleString()}
                   </p>
                 </div>

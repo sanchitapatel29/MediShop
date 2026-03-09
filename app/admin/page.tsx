@@ -1,68 +1,84 @@
-'use client'
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import Cookies from 'js-cookie'
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 interface Product {
-  id: number
-  name: string
-  category: string
-  price: number
-  stock: number
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  stock: number;
 }
 
 export default function Admin() {
-  const router = useRouter()
-  const [products, setProducts] = useState<Product[]>([])
-  const [requests, setRequests] = useState<any[]>([])
+  const router = useRouter();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [requests, setRequests] = useState<any[]>([]);
   const [formData, setFormData] = useState({
-    name: '', category: '', description: '',
-    price: '', stock: '', certification: ''
-  })
-  const [message, setMessage] = useState('')
+    name: "",
+    category: "",
+    description: "",
+    price: "",
+    stock: "",
+    certification: "",
+  });
+  const [message, setMessage] = useState("");
 
   const fetchProducts = () => {
-    fetch('/api/products')
-      .then(res => res.json())
-      .then(data => setProducts(data))
-  }
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => setProducts(data));
+  };
 
   const fetchRequests = () => {
-    const token = Cookies.get('token')
+    const token = Cookies.get("token");
     if (token) {
-      fetch('/api/requests', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      fetch("/api/requests", {
+        headers: { Authorization: `Bearer ${token}` },
       })
-        .then(res => res.json())
-        .then(data => setRequests(data))
+        .then((res) => res.json())
+        .then((data) => setRequests(data));
     }
-  }
+  };
 
   useEffect(() => {
-    fetchProducts()
-    fetchRequests()
-  }, [])
+    fetchProducts();
+    fetchRequests();
+  }, []);
 
   const handleAddProduct = async () => {
-    const res = await fetch('/api/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    })
+    const res = await fetch("/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
     if (res.ok) {
-      setMessage('Product added successfully!')
-      setFormData({ name: '', category: '', description: '', price: '', stock: '', certification: '' })
-      fetchProducts()
-      setTimeout(() => setMessage(''), 3000)
+      setMessage("Product added successfully!");
+      setFormData({
+        name: "",
+        category: "",
+        description: "",
+        price: "",
+        stock: "",
+        certification: "",
+      });
+      fetchProducts();
+      setTimeout(() => setMessage(""), 3000);
     }
-  }
+  };
 
   const handleDelete = async (id: number) => {
-    const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
-    if (res.ok) setProducts(products.filter(p => p.id !== id))
-  }
+    const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
+    if (res.ok) setProducts(products.filter((p) => p.id !== id));
+  };
 
-  const categories = ['Surgical Instruments', 'Diagnostic Equipment', 'Orthopedic Implants', 'ICU Equipment']
+  const categories = [
+    "Surgical Instruments",
+    "Diagnostic Equipment",
+    "Orthopedic Implants",
+    "ICU Equipment",
+  ];
 
   return (
     <main className="min-h-screen bg-[#0a1628] text-white">
@@ -72,31 +88,44 @@ export default function Admin() {
             <span className="text-white font-bold text-sm">M</span>
           </div>
           <span className="text-xl font-bold">MediShop</span>
-          <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/30">Admin</span>
+          <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/30">
+            Admin
+          </span>
         </div>
         <button
-          onClick={() => router.push('/products')}
+          onClick={() => router.push("/products")}
           className="text-white/60 hover:text-white text-sm transition"
         >
           View Store →
         </button>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-1">Admin Dashboard</h1>
           <p className="text-white/40">Manage your product inventory</p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {[
-            { label: 'Total Products', value: products.length },
-            { label: 'Total Stock', value: products.reduce((s, p) => s + p.stock, 0) },
-            { label: 'Categories', value: new Set(products.map(p => p.category)).size },
-          ].map(stat => (
-            <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <p className="text-3xl font-bold text-blue-400 mb-1">{stat.value}</p>
+            { label: "Total Products", value: products.length },
+            {
+              label: "Total Stock",
+              value: products.reduce((s, p) => s + p.stock, 0),
+            },
+            {
+              label: "Categories",
+              value: new Set(products.map((p) => p.category)).size,
+            },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="bg-white/5 border border-white/10 rounded-2xl p-6"
+            >
+              <p className="text-3xl font-bold text-blue-400 mb-1">
+                {stat.value}
+              </p>
               <p className="text-white/40 text-sm">{stat.label}</p>
             </div>
           ))}
@@ -117,16 +146,24 @@ export default function Admin() {
                 placeholder="Product Name"
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
               />
               <select
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition"
                 value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                onChange={(e) =>
+                  setFormData({ ...formData, category: e.target.value })
+                }
               >
-                <option value="" className="bg-[#0a1628]">Select Category</option>
-                {categories.map(cat => (
-                  <option key={cat} value={cat} className="bg-[#0a1628]">{cat}</option>
+                <option value="" className="bg-[#0a1628]">
+                  Select Category
+                </option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat} className="bg-[#0a1628]">
+                    {cat}
+                  </option>
                 ))}
               </select>
               <textarea
@@ -134,7 +171,9 @@ export default function Admin() {
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
                 rows={3}
                 value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
               />
               <div className="grid grid-cols-2 gap-4">
                 <input
@@ -142,14 +181,18 @@ export default function Admin() {
                   placeholder="Price (₹)"
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
                   value={formData.price}
-                  onChange={(e) => setFormData({...formData, price: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, price: e.target.value })
+                  }
                 />
                 <input
                   type="number"
                   placeholder="Stock"
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
                   value={formData.stock}
-                  onChange={(e) => setFormData({...formData, stock: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, stock: e.target.value })
+                  }
                 />
               </div>
               <input
@@ -157,7 +200,9 @@ export default function Admin() {
                 placeholder="Certification (optional)"
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
                 value={formData.certification}
-                onChange={(e) => setFormData({...formData, certification: e.target.value})}
+                onChange={(e) =>
+                  setFormData({ ...formData, certification: e.target.value })
+                }
               />
               <button
                 onClick={handleAddProduct}
@@ -170,17 +215,25 @@ export default function Admin() {
 
           {/* Products List */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-xl font-bold mb-6">All Products ({products.length})</h2>
+            <h2 className="text-xl font-bold mb-6">
+              All Products ({products.length})
+            </h2>
             <div className="space-y-3 max-h-[600px] overflow-y-auto">
               {products.length === 0 ? (
-                <p className="text-white/40 text-center py-8">No products yet</p>
+                <p className="text-white/40 text-center py-8">
+                  No products yet
+                </p>
               ) : (
-                products.map(product => (
-                  <div key={product.id} className="flex justify-between items-center bg-white/5 border border-white/10 rounded-xl p-4">
+                products.map((product) => (
+                  <div
+                    key={product.id}
+                    className="flex justify-between items-center bg-white/5 border border-white/10 rounded-xl p-4"
+                  >
                     <div>
                       <p className="font-medium text-white">{product.name}</p>
                       <p className="text-xs text-white/40 mt-0.5">
-                        {product.category} · ₹{product.price.toLocaleString()} · {product.stock} in stock
+                        {product.category} · ₹{product.price.toLocaleString()} ·{" "}
+                        {product.stock} in stock
                       </p>
                     </div>
                     <button
@@ -198,28 +251,43 @@ export default function Admin() {
 
         {/* Product Requests */}
         <div className="mt-8 bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-xl font-bold mb-6">Product Requests ({requests.length})</h2>
+          <h2 className="text-xl font-bold mb-6">
+            Product Requests ({requests.length})
+          </h2>
           <div className="space-y-3">
             {requests.length === 0 ? (
               <p className="text-white/40 text-center py-8">No requests yet</p>
             ) : (
               requests.map((req: any) => (
-                <div key={req.id} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div
+                  key={req.id}
+                  className="bg-white/5 border border-white/10 rounded-xl p-4"
+                >
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="font-semibold text-white">{req.name}</p>
-                      <p className="text-white/40 text-sm mt-1">{req.description}</p>
+                      <p className="text-white/40 text-sm mt-1">
+                        {req.description}
+                      </p>
                       <p className="text-white/30 text-xs mt-2">
-                        By {req.user.name} ({req.user.hospital_name || req.user.email}) · Qty: {req.quantity}
+                        By {req.user.name} (
+                        {req.user.hospital_name || req.user.email}) · Qty:{" "}
+                        {req.quantity}
                       </p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${
-                      req.urgency === 'urgent' ? 'bg-red-500/20 text-red-400 border-red-500/20' :
-                      req.urgency === 'high' ? 'bg-orange-500/20 text-orange-400 border-orange-500/20' :
-                      req.urgency === 'normal' ? 'bg-blue-500/20 text-blue-400 border-blue-500/20' :
-                      'bg-white/10 text-white/40 border-white/10'
-                    }`}>
-                      {req.urgency.charAt(0).toUpperCase() + req.urgency.slice(1)}
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                        req.urgency === "urgent"
+                          ? "bg-red-500/20 text-red-400 border-red-500/20"
+                          : req.urgency === "high"
+                            ? "bg-orange-500/20 text-orange-400 border-orange-500/20"
+                            : req.urgency === "normal"
+                              ? "bg-blue-500/20 text-blue-400 border-blue-500/20"
+                              : "bg-white/10 text-white/40 border-white/10"
+                      }`}
+                    >
+                      {req.urgency.charAt(0).toUpperCase() +
+                        req.urgency.slice(1)}
                     </span>
                   </div>
                 </div>
@@ -229,5 +297,5 @@ export default function Admin() {
         </div>
       </div>
     </main>
-  )
+  );
 }
