@@ -39,19 +39,20 @@ export default function Products() {
     return matchSearch && matchCategory;
   });
 
-  const addToCart = (product: Product) => {
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const existing = cart.find((i: any) => i.id === product.id);
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      cart.push({ ...product, quantity: 1 });
-    }
-    localStorage.setItem("cart", JSON.stringify(cart));
-    setCartCount(
-      cart.reduce((sum: number, item: any) => sum + item.quantity, 0),
-    );
-  };
+const [toast, setToast] = useState('')
+const addToCart = (product: Product) => {
+  const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+  const existing = cart.find((i: any) => i.id === product.id)
+  if (existing) {
+    existing.quantity += 1
+  } else {
+    cart.push({ ...product, quantity: 1 })
+  }
+  localStorage.setItem('cart', JSON.stringify(cart))
+  setCartCount(cart.reduce((sum: number, item: any) => sum + item.quantity, 0))
+  setToast(`${product.name} added to cart!`)
+  setTimeout(() => setToast(''), 3000)
+}
 
   const categories = [
     "Surgical Instruments",
@@ -62,6 +63,13 @@ export default function Products() {
 
   return (
     <main className="min-h-screen bg-[#0a1628] text-white">
+      {/* Toast Notification */}
+{toast && (
+  <div className="fixed bottom-6 right-6 z-50 bg-green-500 text-white px-6 py-4 rounded-2xl shadow-lg flex items-center gap-3 animate-bounce">
+    <span>✓</span>
+    <span className="font-medium">{toast}</span>
+  </div>
+)}
       {/* Navbar */}
       <nav className="bg-[#0d1f3c] border-b border-white/10 px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-50">
         <div className="flex items-center gap-2">

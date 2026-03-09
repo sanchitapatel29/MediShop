@@ -60,10 +60,17 @@ export default function Cart() {
 
     setLoading(false);
     if (res.ok) {
-      localStorage.removeItem("cart");
-      setCart([]);
-      setMessage("Order placed successfully!");
-      setTimeout(() => router.push("/orders"), 2000);
+      const data = await res.json();
+      const amountToPay = paymentType === "split" ? total * 0.6 : total;
+      // Save payment info for payment page
+      localStorage.setItem(
+        "pendingPayment",
+        JSON.stringify({
+          amount: amountToPay,
+          orderId: data.order.id,
+        }),
+      );
+      router.push("/payment");
     } else {
       const data = await res.json();
       setMessage(data.error || "Something went wrong");
