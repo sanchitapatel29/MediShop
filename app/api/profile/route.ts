@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type { Prisma } from '@prisma/client'
 import { deleteReviewsByUser } from '@/lib/product-content-store'
 import { prisma } from '@/lib/prisma'
 import jwt from 'jsonwebtoken'
@@ -95,7 +96,7 @@ export async function DELETE(request: Request) {
 
     const orderIds = userOrders.map((order: { id: number }) => order.id)
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       if (orderIds.length > 0) {
         await tx.orderItem.deleteMany({
           where: { order_id: { in: orderIds } }
