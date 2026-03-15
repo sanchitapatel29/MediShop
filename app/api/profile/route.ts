@@ -93,7 +93,7 @@ export async function DELETE(request: Request) {
       select: { id: true }
     })
 
-    const orderIds = userOrders.map((order) => order.id)
+    const orderIds = userOrders.map((order: { id: number }) => order.id)
 
     await prisma.$transaction(async (tx) => {
       if (orderIds.length > 0) {
