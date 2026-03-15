@@ -18,6 +18,8 @@ model User {
   created_at    DateTime @default(now())
   orders        Order[]
   productRequests ProductRequest[]
+  products      Product[]
+  notifications Notification[]
 }
 
 model Product {
@@ -28,8 +30,10 @@ model Product {
   price         Float
   stock         Int
   certification String?
+  added_by      Int?
   created_at    DateTime    @default(now())
   orderItems    OrderItem[]
+  admin         User?       @relation(fields: [added_by], references: [id])
 }
 
 model Order {
@@ -64,4 +68,15 @@ model ProductRequest {
   status      String   @default("pending")
   created_at  DateTime @default(now())
   user        User     @relation(fields: [user_id], references: [id])
+}
+
+model Notification {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  title      String
+  message    String
+  type       String   @default("info")
+  is_read    Boolean  @default(false)
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id])
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 
@@ -13,15 +13,28 @@ interface CartItem {
 
 export default function Cart() {
   const router = useRouter();
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    return JSON.parse(localStorage.getItem("cart") || "[]") as CartItem[];
+  });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [paymentType, setPaymentType] = useState<"full" | "split">("full");
-
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("cart") || "[]");
-    setCart(saved);
-  }, []);
+  const [deliveryDetails, setDeliveryDetails] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    companyName: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "India",
+    billingName: "",
+    billingGstin: "",
+    billingAddress: "",
+  });
 
   const updateQuantity = (id: number, quantity: number) => {
     const updated = cart
@@ -55,6 +68,7 @@ export default function Cart() {
         })),
         totalPrice: total,
         paymentType: paymentType,
+        deliveryDetails,
       }),
     });
 
@@ -194,6 +208,111 @@ export default function Cart() {
 
             {/* Order Summary */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mt-6">
+              <h3 className="font-semibold text-white/60 text-sm uppercase tracking-wider mb-4">
+                Delivery Details
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <input
+                  type="text"
+                  placeholder="Full Name"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  value={deliveryDetails.fullName}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, fullName: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="Phone Number"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  value={deliveryDetails.phone}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, phone: e.target.value })}
+                />
+                <input
+                  type="email"
+                  placeholder="Email Address"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  value={deliveryDetails.email}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, email: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="Hospital / Company Name"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  value={deliveryDetails.companyName}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, companyName: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="Address Line 1"
+                  className="md:col-span-2 w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  value={deliveryDetails.addressLine1}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, addressLine1: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="Address Line 2"
+                  className="md:col-span-2 w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  value={deliveryDetails.addressLine2}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, addressLine2: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="City"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  value={deliveryDetails.city}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, city: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="State"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  value={deliveryDetails.state}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, state: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="Postal Code"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  value={deliveryDetails.postalCode}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, postalCode: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="Country"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  value={deliveryDetails.country}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, country: e.target.value })}
+                />
+              </div>
+
+              <h3 className="font-semibold text-white/60 text-sm uppercase tracking-wider mb-4">
+                Billing Details
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <input
+                  type="text"
+                  placeholder="Billing Name"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  value={deliveryDetails.billingName}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, billingName: e.target.value })}
+                />
+                <input
+                  type="text"
+                  placeholder="GSTIN / Tax ID (optional)"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  value={deliveryDetails.billingGstin}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, billingGstin: e.target.value })}
+                />
+                <textarea
+                  placeholder="Billing Address"
+                  className="md:col-span-2 w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  rows={3}
+                  value={deliveryDetails.billingAddress}
+                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, billingAddress: e.target.value })}
+                />
+              </div>
+
               <h3 className="font-semibold text-white/60 text-sm uppercase tracking-wider mb-4">
                 Payment Option
               </h3>

@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface Product {
@@ -7,9 +8,15 @@ interface Product {
   name: string;
   category: string;
   description: string;
+  detailedDescription?: string;
   price: number;
   stock: number;
-  certification: string;
+  certification: string | null;
+  imageUrls?: string[];
+}
+
+interface CartItem extends Product {
+  quantity: number;
 }
 
 export default function Products() {
@@ -18,41 +25,45 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
-  const [cartCount, setCartCount] = useState(0);
+  const [cartCount, setCartCount] = useState(() => {
+    if (typeof window === "undefined") return 0;
+
+    const cart = JSON.parse(localStorage.getItem("cart") || "[]") as CartItem[];
+    return cart.reduce((sum, item) => sum + item.quantity, 0);
+  });
+  const [toast, setToast] = useState("");
 
   useEffect(() => {
     fetch("/api/products")
       .then((res) => res.json())
       .then((data) => {
-        setProducts(data);
+        setProducts(Array.isArray(data) ? data : []);
         setLoading(false);
-      });
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    setCartCount(
-      cart.reduce((sum: number, item: any) => sum + item.quantity, 0),
-    );
+      })
+      .catch(() => setLoading(false));
   }, []);
 
-  const filtered = products.filter((p) => {
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchCategory = category ? p.category === category : true;
+  const filtered = products.filter((product) => {
+    const matchSearch = product.name.toLowerCase().includes(search.toLowerCase());
+    const matchCategory = category ? product.category === category : true;
     return matchSearch && matchCategory;
   });
 
-const [toast, setToast] = useState('')
-const addToCart = (product: Product) => {
-  const cart = JSON.parse(localStorage.getItem('cart') || '[]')
-  const existing = cart.find((i: any) => i.id === product.id)
-  if (existing) {
-    existing.quantity += 1
-  } else {
-    cart.push({ ...product, quantity: 1 })
-  }
-  localStorage.setItem('cart', JSON.stringify(cart))
-  setCartCount(cart.reduce((sum: number, item: any) => sum + item.quantity, 0))
-  setToast(`${product.name} added to cart!`)
-  setTimeout(() => setToast(''), 3000)
-}
+  const addToCart = (product: Product) => {
+    const cart = JSON.parse(localStorage.getItem("cart") || "[]") as CartItem[];
+    const existing = cart.find((item) => item.id === product.id);
+
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      cart.push({ ...product, quantity: 1 });
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    setCartCount(cart.reduce((sum, item) => sum + item.quantity, 0));
+    setToast(`${product.name} added to cart`);
+    window.setTimeout(() => setToast(""), 3000);
+  };
 
   const categories = [
     "Surgical Instruments",
@@ -63,35 +74,41 @@ const addToCart = (product: Product) => {
 
   return (
     <main className="min-h-screen bg-[#0a1628] text-white">
-      {/* Toast Notification */}
-{toast && (
-  <div className="fixed bottom-6 right-6 z-50 bg-green-500 text-white px-6 py-4 rounded-2xl shadow-lg flex items-center gap-3 animate-bounce">
-    <span>✓</span>
-    <span className="font-medium">{toast}</span>
-  </div>
-)}
-      {/* Navbar */}
-      <nav className="bg-[#0d1f3c] border-b border-white/10 px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-50">
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-green-500 px-6 py-4 text-white shadow-lg">
+          <span className="font-medium">{toast}</span>
+        </div>
+      )}
+
+      <nav className="sticky top-0 z-50 flex items-center justify-between border-b border-white/10 bg-[#0d1f3c] px-4 py-4 md:px-8">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">M</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500">
+            <span className="text-sm font-bold text-white">M</span>
           </div>
-          <span className="text-lg md:text-xl font-bold">MediShop</span>
+          <span className="text-lg font-bold md:text-xl">MediShop</span>
         </div>
         <div className="flex items-center gap-2 md:gap-4">
           <button
             onClick={() => router.push("/orders")}
-            className="text-white/60 hover:text-white text-sm transition hidden md:block"
+            className="hidden text-sm text-white/60 transition hover:text-white md:block"
           >
             My Orders
           </button>
           <button
-            onClick={() => router.push("/cart")}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 px-3 md:px-4 py-2 rounded-lg text-sm font-medium transition"
+            onClick={() => router.push("/profile")}
+            className="hidden h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 transition hover:bg-white/10 md:flex"
+            title="Profile"
           >
-            🛒 Cart
+            <span aria-hidden="true">P</span>
+            <span className="sr-only">Profile</span>
+          </button>
+          <button
+            onClick={() => router.push("/cart")}
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-blue-500 md:px-4"
+          >
+            Cart
             {cartCount > 0 && (
-              <span className="bg-white text-blue-600 text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-bold text-blue-600">
                 {cartCount}
               </span>
             )}
@@ -99,112 +116,131 @@ const addToCart = (product: Product) => {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6 md:mb-8">
+      <div className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-8">
+        <div className="mb-6 flex flex-col gap-4 md:mb-8 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold mb-1">
-              Product Catalog
-            </h1>
-            <p className="text-white/40 text-sm">
-              Browse certified medical equipment
-            </p>
+            <h1 className="mb-1 text-2xl font-bold md:text-3xl">Product Catalog</h1>
+            <p className="text-sm text-white/40">Browse certified medical equipment</p>
           </div>
           <button
             onClick={() => router.push("/request")}
-            className="bg-white/5 border border-white/10 hover:border-blue-500/50 text-white px-5 py-3 rounded-xl text-sm font-medium transition w-full md:w-auto"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-white transition hover:border-blue-500/50 md:w-auto"
           >
-            + Request a Product
+            Request a Product
           </button>
         </div>
 
-        {/* Search and Filter */}
-        <div className="flex flex-col md:flex-row gap-3 mb-4">
-  <input
-    type="text"
-    placeholder="Search products..."
-    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-  />
-  <select
-    className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition"
-    value={category}
-    onChange={(e) => setCategory(e.target.value)}
-  >
-    <option value="" className="bg-[#0a1628]">All Categories</option>
-    {categories.map(cat => (
-      <option key={cat} value={cat} className="bg-[#0a1628]">{cat}</option>
-    ))}
-  </select>
-</div>
+        <div className="mb-4 flex flex-col gap-3 md:flex-row">
+          <input
+            type="text"
+            placeholder="Search products..."
+            className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 transition focus:border-blue-500 focus:outline-none"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          <select
+            className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white transition focus:border-blue-500 focus:outline-none"
+            value={category}
+            onChange={(event) => setCategory(event.target.value)}
+          >
+            <option value="" className="bg-[#0a1628]">
+              All Categories
+            </option>
+            {categories.map((item) => (
+              <option key={item} value={item} className="bg-[#0a1628]">
+                {item}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        {/* Category Pills */}
-        <div className="flex gap-2 mb-8 flex-wrap">
+        <div className="mb-8 flex flex-wrap gap-2">
           <button
             onClick={() => setCategory("")}
-            className={`px-4 py-2 rounded-full text-sm transition ${category === "" ? "bg-blue-600 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}
+            className={`rounded-full px-4 py-2 text-sm transition ${category === "" ? "bg-blue-600 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}
           >
             All
           </button>
-          {categories.map((cat) => (
+          {categories.map((item) => (
             <button
-              key={cat}
-              onClick={() => setCategory(cat)}
-              className={`px-4 py-2 rounded-full text-sm transition ${category === cat ? "bg-blue-600 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}
+              key={item}
+              onClick={() => setCategory(item)}
+              className={`rounded-full px-4 py-2 text-sm transition ${category === item ? "bg-blue-600 text-white" : "bg-white/5 text-white/50 hover:bg-white/10"}`}
             >
-              {cat}
+              {item}
             </button>
           ))}
         </div>
 
-        {/* Products Grid */}
         {loading ? (
-          <div className="text-center text-white/40 py-20">
-            Loading products...
-          </div>
+          <div className="py-20 text-center text-white/40">Loading products...</div>
         ) : filtered.length === 0 ? (
-          <div className="text-center text-white/40 py-20">
-            No products found
-          </div>
+          <div className="py-20 text-center text-white/40">No products found</div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 md:gap-6">
             {filtered.map((product) => (
               <div
                 key={product.id}
-                className="bg-white/5 border border-white/10 rounded-2xl p-6 hover:border-blue-500/50 hover:bg-white/8 transition cursor-pointer group"
+                onClick={() => router.push(`/products/${product.id}`)}
+                className="group cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-6 transition hover:border-blue-500/50 hover:bg-white/8"
               >
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-6 mb-4 text-center">
-                  <span className="text-4xl">🏥</span>
-                </div>
-                <span className="text-xs bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20">
+                {product.imageUrls?.[0] ? (
+                  <div className="mb-4 overflow-hidden rounded-xl border border-white/10 bg-white/5">
+                    <img
+                      src={product.imageUrls[0]}
+                      alt={product.name}
+                      className="h-48 w-full object-cover transition duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                ) : (
+                  <div className="mb-4 rounded-xl border border-blue-500/20 bg-blue-500/10 p-6 text-center">
+                    <span className="text-4xl">IMG</span>
+                  </div>
+                )}
+
+                <span className="rounded-full border border-blue-500/20 bg-blue-500/20 px-3 py-1 text-xs text-blue-400">
                   {product.category}
                 </span>
-                <h3 className="font-semibold text-white mt-3 mb-1 group-hover:text-blue-400 transition">
+                <h3 className="mt-3 mb-1 font-semibold text-white transition group-hover:text-blue-400">
                   {product.name}
                 </h3>
-                <p className="text-white/40 text-sm mb-4 line-clamp-2">
-                  {product.description}
-                </p>
+                <p className="mb-4 line-clamp-2 text-sm text-white/40">{product.description}</p>
+
                 {product.certification && (
-                  <p className="text-xs text-green-400/70 mb-3">
-                    ✓ {product.certification}
-                  </p>
+                  <p className="mb-3 text-xs text-green-400/70">{product.certification}</p>
                 )}
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-blue-400 font-bold text-xl">
-                    ₹{product.price}
-                  </span>
-                  <span className="text-white/30 text-sm">
-                    {product.stock} in stock
-                  </span>
+
+                <div className="mb-4 flex items-center justify-between">
+                  <span className="text-xl font-bold text-blue-400">Rs {product.price}</span>
+                  {product.stock < 4 ? (
+                    <span className="text-sm font-medium text-orange-400">
+                      Only {product.stock} left
+                    </span>
+                  ) : (
+                    <span className="text-sm text-white/40">Available</span>
+                  )}
                 </div>
-                <button
-                  onClick={() => addToCart(product)}
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-sm font-medium transition"
-                >
-                  Add to Cart
-                </button>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      router.push(`/products/${product.id}`);
+                    }}
+                    className="rounded-xl border border-white/10 bg-white/5 py-2.5 text-sm font-medium text-white transition hover:border-blue-500/40"
+                  >
+                    Details
+                  </button>
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      addToCart(product);
+                    }}
+                    className="rounded-xl bg-blue-600 py-2.5 text-sm font-medium text-white transition hover:bg-blue-500"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
               </div>
             ))}
           </div>

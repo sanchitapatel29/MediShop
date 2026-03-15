@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 export default function Signup() {
   const router = useRouter()
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', hospital_name: ''
+    name: '', email: '', password: '', hospital_name: '', role: 'doctor'
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -49,7 +49,7 @@ export default function Signup() {
             <span className="text-2xl font-bold text-white">MediShop</span>
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">Create account</h2>
-          <p className="text-white/50">Join 500+ hospitals on MediShop</p>
+          <p className="text-white/50">Join our medical equipment marketplace</p>
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
@@ -70,6 +70,39 @@ export default function Signup() {
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
               />
             </div>
+            
+            <div>
+              <label className="text-white/60 text-sm mb-3 block">I am a</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, role: 'doctor'})}
+                  className={`p-4 rounded-xl border-2 transition ${
+                    formData.role === 'doctor'
+                      ? 'border-blue-500 bg-blue-500/10'
+                      : 'border-white/10 bg-white/5 hover:border-white/20'
+                  }`}
+                >
+                  <div className="text-2xl mb-2">🏥</div>
+                  <div className="text-white font-medium text-sm">Doctor/Hospital</div>
+                  <div className="text-white/40 text-xs mt-1">Purchase equipment</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, role: 'admin'})}
+                  className={`p-4 rounded-xl border-2 transition ${
+                    formData.role === 'admin'
+                      ? 'border-blue-500 bg-blue-500/10'
+                      : 'border-white/10 bg-white/5 hover:border-white/20'
+                  }`}
+                >
+                  <div className="text-2xl mb-2">🏪</div>
+                  <div className="text-white font-medium text-sm">Supplier/Admin</div>
+                  <div className="text-white/40 text-xs mt-1">Sell equipment</div>
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="text-white/60 text-sm mb-2 block">Email Address</label>
               <input
@@ -91,10 +124,12 @@ export default function Signup() {
               />
             </div>
             <div>
-              <label className="text-white/60 text-sm mb-2 block">Hospital Name <span className="text-white/30">(optional)</span></label>
+              <label className="text-white/60 text-sm mb-2 block">
+                {formData.role === 'admin' ? 'Company/Store Name' : 'Hospital Name'} <span className="text-white/30">(optional)</span>
+              </label>
               <input
                 type="text"
-                placeholder="City General Hospital"
+                placeholder={formData.role === 'admin' ? 'MedEquip Supplies' : 'City General Hospital'}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
                 value={formData.hospital_name}
                 onChange={(e) => setFormData({...formData, hospital_name: e.target.value})}
