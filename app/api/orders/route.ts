@@ -48,21 +48,26 @@ export async function POST(request: Request) {
       }
     })
 
-    await saveOrderDetails(order.id, {
-      fullName: deliveryDetails.fullName.trim(),
-      phone: deliveryDetails.phone.trim(),
-      email: deliveryDetails.email.trim(),
-      companyName: deliveryDetails.companyName?.trim() || '',
-      addressLine1: deliveryDetails.addressLine1.trim(),
-      addressLine2: deliveryDetails.addressLine2?.trim() || '',
-      city: deliveryDetails.city.trim(),
-      state: deliveryDetails.state.trim(),
-      postalCode: deliveryDetails.postalCode.trim(),
-      country: deliveryDetails.country.trim(),
-      billingName: deliveryDetails.billingName.trim(),
-      billingGstin: deliveryDetails.billingGstin?.trim() || '',
-      billingAddress: deliveryDetails.billingAddress.trim()
-    })
+    let deliveryDetailsSaved = true
+    try {
+      await saveOrderDetails(order.id, {
+        fullName: deliveryDetails.fullName.trim(),
+        phone: deliveryDetails.phone.trim(),
+        email: deliveryDetails.email.trim(),
+        companyName: deliveryDetails.companyName?.trim() || '',
+        addressLine1: deliveryDetails.addressLine1.trim(),
+        addressLine2: deliveryDetails.addressLine2?.trim() || '',
+        city: deliveryDetails.city.trim(),
+        state: deliveryDetails.state.trim(),
+        postalCode: deliveryDetails.postalCode.trim(),
+        country: deliveryDetails.country.trim(),
+        billingName: deliveryDetails.billingName.trim(),
+        billingGstin: deliveryDetails.billingGstin?.trim() || '',
+        billingAddress: deliveryDetails.billingAddress.trim()
+      })
+    } catch {
+      deliveryDetailsSaved = false
+    }
 
     // Reduce stock and notify admins
     const adminNotifications = new Map<number, { productNames: string[], totalItems: number }>()
@@ -121,7 +126,11 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ message: 'Order placed successfully', order })
+    return NextResponse.json({
+      message: 'Order placed successfully',
+      order,
+      deliveryDetailsSaved
+    })
   } catch {
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
   }
@@ -142,9 +151,14 @@ export async function GET(request: Request) {
       orderBy: { created_at: 'desc' }
     })
 
-    const orderDetails = await getMultipleOrderDetails(
-      orders.map((order: { id: number }) => order.id)
-    )
+    let orderDetails: Record<number, unknown> = {}
+    try {
+      orderDetails = await getMultipleOrderDetails(
+        orders.map((order: { id: number }) => order.id)
+      ) as Record<number, unknown>
+    } catch {
+      orderDetails = {}
+    }
 
     return NextResponse.json(
       orders.map((order: { id: number } & Record<string, unknown>) => ({

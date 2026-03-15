@@ -6,21 +6,25 @@ export default function Payment() {
   const router = useRouter()
   const [step, setStep] = useState<'details' | 'processing' | 'success'>('details')
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'upi'>('card')
-  const [amount, setAmount] = useState(0)
-  const [orderId, setOrderId] = useState('')
+  const [amount] = useState(() => {
+    if (typeof window === 'undefined') return 0
+    const pendingPayment = JSON.parse(localStorage.getItem('pendingPayment') || '{}')
+    return pendingPayment.amount || 0
+  })
+  const [orderId] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    const pendingPayment = JSON.parse(localStorage.getItem('pendingPayment') || '{}')
+    return pendingPayment.orderId || ''
+  })
   const [formData, setFormData] = useState({
     cardNumber: '', expiry: '', cvv: '', name: '', upi: ''
   })
 
   useEffect(() => {
-    const pendingPayment = JSON.parse(localStorage.getItem('pendingPayment') || '{}')
-    if (!pendingPayment.amount) {
+    if (!amount) {
       router.push('/cart')
-      return
     }
-    setAmount(pendingPayment.amount)
-    setOrderId(pendingPayment.orderId)
-  }, [])
+  }, [amount, router])
 
   const handlePayment = async () => {
     setStep('processing')
@@ -41,7 +45,7 @@ export default function Payment() {
 
   if (step === 'processing') {
     return (
-      <main className="min-h-screen bg-[#0a1628] text-white flex items-center justify-center">
+      <main className="min-h-screen bg-[#0a1628] text-white flex items-center justify-center px-4">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
           <h2 className="text-2xl font-bold mb-2">Processing Payment</h2>
@@ -53,12 +57,12 @@ export default function Payment() {
 
   if (step === 'success') {
     return (
-      <main className="min-h-screen bg-[#0a1628] text-white flex items-center justify-center">
-        <div className="text-center max-w-md px-8">
+      <main className="min-h-screen bg-[#0a1628] text-white flex items-center justify-center px-4">
+        <div className="text-center max-w-md px-4 sm:px-8">
           <div className="w-20 h-20 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
             <span className="text-4xl">✓</span>
           </div>
-          <h2 className="text-3xl font-bold text-green-400 mb-2">Payment Successful!</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-green-400 mb-2">Payment Successful!</h2>
           <p className="text-white/40 mb-2">Order #{orderId} confirmed</p>
           <p className="text-white/40 mb-8">₹{amount.toLocaleString()} paid successfully</p>
           <button
@@ -74,7 +78,7 @@ export default function Payment() {
 
   return (
     <main className="min-h-screen bg-[#0a1628] text-white">
-      <nav className="bg-[#0d1f3c] border-b border-white/10 px-8 py-4 flex justify-between items-center">
+      <nav className="bg-[#0d1f3c] border-b border-white/10 px-4 md:px-8 py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">M</span>
@@ -93,13 +97,13 @@ export default function Payment() {
         </div>
 
         {/* Amount */}
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6 flex justify-between items-center">
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6 flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center">
           <span className="text-white/60">Amount to Pay</span>
           <span className="text-2xl font-bold text-blue-400">₹{amount.toLocaleString()}</span>
         </div>
 
         {/* Payment Method Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6">
           <button
             onClick={() => setPaymentMethod('card')}
             className={`flex-1 py-3 rounded-xl text-sm font-medium transition border ${
@@ -135,7 +139,7 @@ export default function Payment() {
                 onChange={(e) => setFormData({...formData, cardNumber: formatCardNumber(e.target.value)})}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-white/60 text-sm mb-2 block">Expiry</label>
                 <input

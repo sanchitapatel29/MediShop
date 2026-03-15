@@ -182,7 +182,7 @@ export default function ProductDetailPage() {
   return (
     <main className="min-h-screen bg-[#0a1628] text-white">
       <nav className="border-b border-white/10 bg-[#0d1f3c] px-4 py-4 md:px-8">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
             onClick={() => router.push("/products")}
             className="text-sm text-white/60 transition hover:text-white"
@@ -212,17 +212,17 @@ export default function ProductDetailPage() {
                 <img
                   src={gallery[selectedImage]}
                   alt={product.name}
-                  className="h-[420px] w-full object-cover"
+                  className="h-64 w-full object-cover sm:h-80 lg:h-[420px]"
                 />
               ) : (
-                <div className="flex h-[420px] items-center justify-center text-5xl text-white/30">
+                <div className="flex h-64 items-center justify-center text-4xl text-white/30 sm:h-80 lg:h-[420px] lg:text-5xl">
                   No image
                 </div>
               )}
             </div>
 
             {gallery.length > 1 && (
-              <div className="mt-4 grid grid-cols-4 gap-3">
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {gallery.map((imageUrl, index) => (
                   <button
                     key={imageUrl + index}
@@ -232,7 +232,7 @@ export default function ProductDetailPage() {
                     <img
                       src={imageUrl}
                       alt={`${product.name} ${index + 1}`}
-                      className="h-24 w-full object-cover"
+                      className="h-20 w-full object-cover sm:h-24"
                     />
                   </button>
                 ))}
@@ -245,13 +245,13 @@ export default function ProductDetailPage() {
               <span className="rounded-full border border-blue-500/20 bg-blue-500/20 px-3 py-1 text-xs text-blue-400">
                 {product.category}
               </span>
-              <h1 className="mt-4 text-3xl font-bold">{product.name}</h1>
+              <h1 className="mt-4 text-2xl font-bold sm:text-3xl">{product.name}</h1>
               <p className="mt-3 text-white/60">{product.description}</p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
               <p className="text-sm text-white/40">Price</p>
-              <p className="mt-2 text-3xl font-bold text-blue-400">Rs {product.price}</p>
+              <p className="mt-2 text-2xl font-bold text-blue-400 sm:text-3xl">Rs {product.price}</p>
               {product.stock < 4 && (
                 <p className="mt-3 text-sm font-medium text-orange-400">
                   Only {product.stock} left
@@ -281,7 +281,7 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-lg font-semibold">Customer Rating</h2>
                 <span className="text-sm text-white/40">{product.reviews.length} review(s)</span>
               </div>
@@ -301,7 +301,7 @@ export default function ProductDetailPage() {
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
           <section className="rounded-3xl border border-white/10 bg-white/5 p-5">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Write a Review</h2>
                 <p className="mt-1 text-xs text-white/40">
@@ -339,8 +339,8 @@ export default function ProductDetailPage() {
             </div>
           </section>
 
-          <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
-            <div className="flex items-center justify-between">
+          <section className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-xl font-semibold">Customer Reviews</h2>
               <span className="text-sm text-white/40">{product.reviews.length} total</span>
             </div>

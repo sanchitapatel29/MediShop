@@ -38,9 +38,14 @@ export async function GET(request: Request) {
       orderBy: { created_at: 'desc' }
     })
 
-    const orderDetails = await getMultipleOrderDetails(
-      orders.map((order: { id: number }) => order.id)
-    )
+    let orderDetails: Record<number, unknown> = {}
+    try {
+      orderDetails = await getMultipleOrderDetails(
+        orders.map((order: { id: number }) => order.id)
+      ) as Record<number, unknown>
+    } catch {
+      orderDetails = {}
+    }
 
     return NextResponse.json(
       orders.map((order: { id: number } & Record<string, unknown>) => ({

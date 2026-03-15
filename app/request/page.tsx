@@ -37,7 +37,7 @@ export default function RequestProduct() {
 
   return (
     <main className="min-h-screen bg-[#0a1628] text-white">
-      <nav className="bg-[#0d1f3c] border-b border-white/10 px-8 py-4 flex justify-between items-center">
+      <nav className="bg-[#0d1f3c] border-b border-white/10 px-4 md:px-8 py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">M</span>
@@ -52,10 +52,10 @@ export default function RequestProduct() {
         </button>
       </nav>
 
-      <div className="max-w-2xl mx-auto px-8 py-12">
+      <div className="max-w-2xl mx-auto px-4 md:px-8 py-8 md:py-12">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Request a Product</h1>
-          <p className="text-white/40">Can't find what you need? Let us know and we'll source it for you.</p>
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">Request a Product</h1>
+          <p className="text-white/40">Can&apos;t find what you need? Let us know and we&apos;ll source it for you.</p>
         </div>
 
         {success ? (
@@ -71,7 +71,7 @@ export default function RequestProduct() {
             </button>
           </div>
         ) : (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-8">
             {error && (
               <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6 text-sm">
                 {error}
@@ -101,7 +101,7 @@ export default function RequestProduct() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-white/60 text-sm mb-2 block">Quantity Required</label>
                   <input

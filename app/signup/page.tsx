@@ -31,7 +31,7 @@ export default function Signup() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a1628] flex items-center justify-center relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a1628] flex items-center justify-center relative overflow-hidden px-4 py-8">
       <div className="absolute inset-0 opacity-10"
         style={{
           backgroundImage: 'linear-gradient(#1e40af 1px, transparent 1px), linear-gradient(90deg, #1e40af 1px, transparent 1px)',
@@ -40,19 +40,19 @@ export default function Signup() {
       />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-blue-500 opacity-10 blur-[120px] rounded-full" />
 
-      <div className="relative z-10 w-full max-w-md px-8">
-        <div className="text-center mb-8">
+      <div className="relative z-10 w-full max-w-md px-2 sm:px-6 md:px-8">
+        <div className="text-center mb-6 md:mb-8">
           <div className="inline-flex items-center gap-3 mb-6">
             <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold">M</span>
             </div>
             <span className="text-2xl font-bold text-white">MediShop</span>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">Create account</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Create account</h2>
           <p className="text-white/50">Join our medical equipment marketplace</p>
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-6 md:p-8 backdrop-blur-sm">
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6 text-sm">
               {error}
@@ -73,7 +73,7 @@ export default function Signup() {
             
             <div>
               <label className="text-white/60 text-sm mb-3 block">I am a</label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setFormData({...formData, role: 'doctor'})}

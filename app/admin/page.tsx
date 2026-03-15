@@ -33,13 +33,27 @@ interface Order {
   } | null
 }
 interface Notification { id: number; title: string; message: string; type: string; is_read: boolean; created_at: string }
+interface ProductRequest {
+  id: number
+  name: string
+  description: string
+  quantity: number
+  urgency: string
+  status: string
+  created_at: string
+  user: {
+    name: string
+    email: string
+    hospital_name: string | null
+  }
+}
 
 export default function Admin() {
   const router = useRouter()
   const [tab, setTab] = useState<'products' | 'orders' | 'requests'>('products')
   const [products, setProducts] = useState<Product[]>([])
   const [orders, setOrders] = useState<Order[]>([])
-  const [requests, setRequests] = useState<any[]>([])
+  const [requests, setRequests] = useState<ProductRequest[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
   const [formData, setFormData] = useState({
@@ -56,32 +70,29 @@ export default function Admin() {
 
   const token = Cookies.get('token')
 
-  const fetchAll = () => {
-    // Fetch only this admin's products
-    if (token) {
-      fetch('/api/products?myProducts=true', { headers: { 'Authorization': `Bearer ${token}` } })
-        .then(r => r.json())
-        .then(data => setProducts(Array.isArray(data) ? data : []))
-        .catch(() => setProducts([]))
+  useEffect(() => {
+    if (!token) return
 
-      fetch('/api/orders/admin', { headers: { 'Authorization': `Bearer ${token}` } })
-        .then(r => r.ok ? r.json() : [])
-        .then(data => setOrders(Array.isArray(data) ? data : []))
-        .catch(() => setOrders([]))
+    fetch('/api/products?myProducts=true', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => setProducts(Array.isArray(data) ? data : []))
+      .catch(() => setProducts([]))
 
-      fetch('/api/requests', { headers: { 'Authorization': `Bearer ${token}` } })
-        .then(r => r.ok ? r.json() : [])
-        .then(data => setRequests(Array.isArray(data) ? data : []))
-        .catch(() => setRequests([]))
+    fetch('/api/orders/admin', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setOrders(Array.isArray(data) ? data : []))
+      .catch(() => setOrders([]))
 
-      fetch('/api/notifications', { headers: { 'Authorization': `Bearer ${token}` } })
-        .then(r => r.ok ? r.json() : [])
-        .then(data => setNotifications(Array.isArray(data) ? data : []))
-        .catch(() => setNotifications([]))
-    }
-  }
+    fetch('/api/requests', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setRequests(Array.isArray(data) ? data : []))
+      .catch(() => setRequests([]))
 
-  useEffect(() => { fetchAll() }, [])
+    fetch('/api/notifications', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setNotifications(Array.isArray(data) ? data : []))
+      .catch(() => setNotifications([]))
+  }, [token])
 
   const unreadCount = notifications.filter(n => !n.is_read).length
 
@@ -117,7 +128,12 @@ export default function Admin() {
         stock: '',
         certification: ''
       })
-      fetchAll()
+      if (token) {
+        fetch('/api/products?myProducts=true', { headers: { 'Authorization': `Bearer ${token}` } })
+          .then(r => r.json())
+          .then(data => setProducts(Array.isArray(data) ? data : []))
+          .catch(() => setProducts([]))
+      }
       setTimeout(() => setMessage(''), 3000)
     }
   }
@@ -162,7 +178,7 @@ export default function Admin() {
     <main className="min-h-screen bg-[#0a1628] text-white" suppressHydrationWarning>
 
       {/* Navbar */}
-      <nav className="bg-[#0d1f3c] border-b border-white/10 px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-50">
+      <nav className="bg-[#0d1f3c] border-b border-white/10 px-4 md:px-8 py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">M</span>
@@ -170,7 +186,7 @@ export default function Admin() {
           <span className="text-xl font-bold">MediShop</span>
           <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full border border-red-500/30">Admin</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 self-end sm:self-auto">
 
           {/* Notifications Bell */}
           <div className="relative">
@@ -187,7 +203,7 @@ export default function Admin() {
             </button>
 
             {showNotifications && (
-              <div className="absolute right-0 top-12 w-80 md:w-96 bg-[#0d1f3c] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
+              <div className="absolute right-0 top-12 w-[calc(100vw-2rem)] max-w-80 md:max-w-96 bg-[#0d1f3c] border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden">
                 <div className="p-4 border-b border-white/10 flex justify-between items-center">
                   <h3 className="font-semibold">Notifications</h3>
                   <button onClick={() => setShowNotifications(false)} className="text-white/40 hover:text-white">✕</button>
@@ -232,7 +248,7 @@ export default function Admin() {
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-1">Admin Dashboard</h1>
+          <h1 className="text-2xl md:text-3xl font-bold mb-1">Admin Dashboard</h1>
           <p className="text-white/40">Manage inventory, orders, and requests</p>
         </div>
 
@@ -242,7 +258,7 @@ export default function Admin() {
             { label: 'My Products', value: products.length },
             { label: 'Total Stock', value: products.reduce((s, p) => s + p.stock, 0) },
             { label: 'Orders to Fulfill', value: orders.filter(o => o.status === 'pending').length },
-            { label: 'Pending Requests', value: requests.filter((r: any) => r.status === 'pending').length },
+            { label: 'Pending Requests', value: requests.filter((r) => r.status === 'pending').length },
           ].map(stat => (
             <div key={stat.label} className="bg-white/5 border border-white/10 rounded-2xl p-4 md:p-6">
               <p className="text-2xl md:text-3xl font-bold text-blue-400 mb-1">{stat.value}</p>
@@ -252,7 +268,7 @@ export default function Admin() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
           {(['products', 'orders', 'requests'] as const).map(t => (
             <button
               key={t}
@@ -308,7 +324,7 @@ export default function Admin() {
                   value={formData.detailedDescription}
                   onChange={(e) => setFormData({...formData, detailedDescription: e.target.value})}
                 />
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <input
                     type="number"
                     placeholder="Price (₹)"
@@ -354,7 +370,7 @@ export default function Admin() {
                   <p className="text-white/40 text-center py-8">No products yet</p>
                 ) : (
                   products.map(product => (
-                    <div key={product.id} className="flex justify-between items-center bg-white/5 border border-white/10 rounded-xl p-4">
+                    <div key={product.id} className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center bg-white/5 border border-white/10 rounded-xl p-4">
                       <div>
                         <p className="font-medium text-white">{product.name}</p>
                         <p className="text-xs text-white/40 mt-0.5">
@@ -423,7 +439,7 @@ export default function Admin() {
 
                   {order.deliveryDetails && (
                     <div className="border-t border-white/10 pt-4 mb-4 grid gap-4 md:grid-cols-2 text-sm">
-                      <div>
+                      <div className="min-w-0">
                         <p className="text-white/40 text-xs uppercase tracking-wider mb-2">Delivery</p>
                         <p className="text-white">{order.deliveryDetails.fullName}</p>
                         <p className="text-white/60">{order.deliveryDetails.phone}</p>
@@ -464,7 +480,7 @@ export default function Admin() {
                     ))}
                     <button
                       onClick={() => deleteOrder(order.id)}
-                      className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition ml-auto"
+                      className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition sm:ml-auto w-full sm:w-auto"
                     >
                       🗑 Delete Order
                     </button>
@@ -484,7 +500,7 @@ export default function Admin() {
                 <p className="text-white/40">No product requests yet</p>
               </div>
             ) : (
-              requests.map((req: any) => (
+              requests.map((req) => (
                 <div key={req.id} className="bg-white/5 border border-white/10 rounded-2xl p-6">
                   <div className="flex flex-col md:flex-row justify-between items-start gap-3">
                     <div className="flex-1">

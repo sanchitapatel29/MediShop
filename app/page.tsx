@@ -20,7 +20,7 @@ export default function Home() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-blue-500 opacity-10 blur-[120px] rounded-full" />
 
       {/* Navbar */}
-      <nav className="relative z-10 flex justify-between items-center px-12 py-6 border-b border-white/10">
+      <nav className="relative z-10 flex flex-col gap-4 px-4 py-5 border-b border-white/10 sm:flex-row sm:items-center sm:justify-between md:px-12 md:py-6">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">M</span>
@@ -30,16 +30,16 @@ export default function Home() {
             B2B
           </span>
         </div>
-        <div className="flex gap-4">
+        <div className="flex w-full gap-3 sm:w-auto sm:gap-4">
           <button
             onClick={() => router.push("/login")}
-            className="px-5 py-2 text-sm text-white/70 hover:text-white transition"
+            className="flex-1 px-4 py-2 text-sm text-white/70 hover:text-white transition sm:flex-none"
           >
             Login
           </button>
           <button
             onClick={() => router.push("/signup")}
-            className="px-5 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition font-medium"
+            className="flex-1 px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition font-medium sm:flex-none"
           >
             Get Started
           </button>

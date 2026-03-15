@@ -62,7 +62,7 @@ export default function Orders() {
 
   return (
     <main className="min-h-screen bg-[#0a1628] text-white">
-      <nav className="bg-[#0d1f3c] border-b border-white/10 px-8 py-4 flex justify-between items-center">
+      <nav className="bg-[#0d1f3c] border-b border-white/10 px-4 py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center md:px-8">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">M</span>
@@ -77,9 +77,9 @@ export default function Orders() {
         </button>
       </nav>
 
-      <div className="max-w-3xl mx-auto px-8 py-8">
+      <div className="max-w-3xl mx-auto px-4 md:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-1">My Orders</h1>
+          <h1 className="text-2xl md:text-3xl font-bold mb-1">My Orders</h1>
           <p className="text-white/40">Track your procurement history</p>
         </div>
 
@@ -105,7 +105,7 @@ export default function Orders() {
                 key={order.id}
                 className="bg-white/5 border border-white/10 rounded-2xl p-6"
               >
-                <div className="flex justify-between items-start mb-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-start mb-4">
                   <div>
                     <p className="font-bold text-white text-lg">
                       {order.items.length === 1
