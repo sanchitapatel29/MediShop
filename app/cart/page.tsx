@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 
@@ -13,10 +13,7 @@ interface CartItem {
 
 export default function Cart() {
   const router = useRouter();
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    if (typeof window === "undefined") return [];
-    return JSON.parse(localStorage.getItem("cart") || "[]") as CartItem[];
-  });
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [paymentType, setPaymentType] = useState<"full" | "split">("full");
@@ -35,6 +32,15 @@ export default function Cart() {
     billingGstin: "",
     billingAddress: "",
   });
+
+  useEffect(() => {
+    const frameId = window.requestAnimationFrame(() => {
+      const savedCart = JSON.parse(localStorage.getItem("cart") || "[]") as CartItem[];
+      setCart(savedCart);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, []);
 
   const updateQuantity = (id: number, quantity: number) => {
     const updated = cart

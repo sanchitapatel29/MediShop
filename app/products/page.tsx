@@ -25,12 +25,7 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
-  const [cartCount, setCartCount] = useState(() => {
-    if (typeof window === "undefined") return 0;
-
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]") as CartItem[];
-    return cart.reduce((sum, item) => sum + item.quantity, 0);
-  });
+  const [cartCount, setCartCount] = useState(0);
   const [toast, setToast] = useState("");
 
   useEffect(() => {
@@ -41,6 +36,13 @@ export default function Products() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+
+    const frameId = window.requestAnimationFrame(() => {
+      const cart = JSON.parse(localStorage.getItem("cart") || "[]") as CartItem[];
+      setCartCount(cart.reduce((sum, item) => sum + item.quantity, 0));
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
   }, []);
 
   const filtered = products.filter((product) => {
