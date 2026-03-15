@@ -20,7 +20,7 @@ export async function GET(request: Request) {
             orderBy: { created_at: 'desc' }
           })
           return NextResponse.json(
-            products.map((product) => ({
+            products.map((product: { id: number } & Record<string, unknown>) => ({
               ...product,
               detailedDescription: allProductContent[String(product.id)]?.detailedDescription || '',
               imageUrls: allProductContent[String(product.id)]?.imageUrls || []
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
       orderBy: { created_at: 'desc' }
     })
     return NextResponse.json(
-      products.map((product) => ({
+      products.map((product: { id: number } & Record<string, unknown>) => ({
         ...product,
         detailedDescription: allProductContent[String(product.id)]?.detailedDescription || '',
         imageUrls: allProductContent[String(product.id)]?.imageUrls || []
