@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 export async function POST(request:Request) {
   try {
     const body = await request.json()
-    const { email, password } = body
+    const { email, password, portal } = body
 
     // Find the user
     const user = await prisma.user.findUnique({
@@ -30,6 +30,19 @@ export async function POST(request:Request) {
       )
     }
 
+    const expectedRole = portal === 'admin' ? 'admin' : 'doctor'
+    if (user.role !== expectedRole) {
+      return NextResponse.json(
+        {
+          error:
+            expectedRole === 'admin'
+              ? 'This account does not have admin access'
+              : 'Use the admin portal to sign in with an admin account'
+        },
+        { status: 403 }
+      )
+    }
+
     // Create JWT token
     const token = jwt.sign(
       { userId: user.id, role: user.role },
@@ -48,7 +61,7 @@ export async function POST(request:Request) {
       }
     })
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Something went wrong' },
       { status: 500 }

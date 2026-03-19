@@ -14,14 +14,17 @@ export default function RequestProduct() {
 
   const handleSubmit = async () => {
     const token = Cookies.get('token')
-    if (!token) { router.push('/login'); return }
+    if (!token) {
+      router.push('/login')
+      return
+    }
 
     setLoading(true)
     const res = await fetch('/api/requests', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       },
       body: JSON.stringify(formData)
     })
@@ -36,104 +39,120 @@ export default function RequestProduct() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a1628] text-white">
-      <nav className="bg-[#0d1f3c] border-b border-white/10 px-4 md:px-8 py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">M</span>
+    <main className="app-shell min-h-screen text-slate-100">
+      <nav className="border-b border-white/10 bg-[#0b1623]/90 px-4 py-4 backdrop-blur-xl md:px-8">
+        <div className="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-100 text-sm font-bold text-slate-900">
+              M
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">Sourcing Request</p>
+              <span className="text-xl font-semibold tracking-tight">Request a Product</span>
+            </div>
           </div>
-          <span className="text-xl font-bold">MediShop</span>
+          <button
+            onClick={() => router.push('/products')}
+            className="rounded-xl border border-slate-800 bg-slate-950/45 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-700 hover:text-white"
+          >
+            Back to Products
+          </button>
         </div>
-        <button
-          onClick={() => router.push('/products')}
-          className="text-white/60 hover:text-white text-sm transition"
-        >
-          ← Back to Products
-        </button>
       </nav>
 
-      <div className="max-w-2xl mx-auto px-4 md:px-8 py-8 md:py-12">
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">Request a Product</h1>
-          <p className="text-white/40">Can&apos;t find what you need? Let us know and we&apos;ll source it for you.</p>
-        </div>
+      <div className="mx-auto max-w-4xl px-4 py-8 md:px-8 md:py-12">
+        <section className="mb-8 rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(9,18,29,0.78))] p-6 shadow-[0_32px_90px_rgba(2,6,23,0.34)] md:p-8">
+          <p className="text-xs uppercase tracking-[0.34em] text-slate-400">Custom Sourcing</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">Request equipment that is not currently listed.</h1>
+          <p className="mt-3 text-sm leading-relaxed text-slate-400 md:text-base">
+            Submit product requirements, specifications, required quantity, and urgency so the supplier team can review sourcing feasibility.
+          </p>
+        </section>
 
         {success ? (
-          <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-12 text-center">
-            <p className="text-5xl mb-4">✅</p>
-            <h2 className="text-2xl font-bold text-green-400 mb-2">Request Submitted!</h2>
-            <p className="text-white/40 mb-6">Our team will review your request and get back to you within 24 hours.</p>
+          <div className="rounded-[32px] border border-emerald-500/20 bg-emerald-500/10 p-12 text-center shadow-[0_24px_70px_rgba(2,6,23,0.2)]">
+            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full border border-emerald-500/20 bg-slate-950/30 text-sm font-semibold tracking-[0.3em] text-emerald-200">
+              OK
+            </div>
+            <h2 className="text-3xl font-semibold tracking-tight text-emerald-100">Request Submitted</h2>
+            <p className="mt-3 text-slate-200">Our team will review your request and respond as soon as possible.</p>
             <button
               onClick={() => router.push('/products')}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-medium transition"
+              className="mt-8 rounded-xl bg-slate-100 px-6 py-3 font-semibold text-slate-950 transition hover:bg-white"
             >
               Back to Products
             </button>
           </div>
         ) : (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 md:p-8">
+          <div className="rounded-[32px] border border-slate-800 bg-slate-950/45 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.2)] md:p-8">
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6 text-sm">
+              <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
                 {error}
               </div>
             )}
 
             <div className="space-y-5">
               <div>
-                <label className="text-white/60 text-sm mb-2 block">Product Name</label>
+                <label className="mb-2 block text-sm text-slate-400">Product Name</label>
                 <input
                   type="text"
                   placeholder="e.g. Arthroscopic Shaver System"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
                   value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
 
               <div>
-                <label className="text-white/60 text-sm mb-2 block">Description & Specifications</label>
+                <label className="mb-2 block text-sm text-slate-400">Description and Specifications</label>
                 <textarea
-                  placeholder="Describe the product, brand preference, specifications, or any other details..."
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
-                  rows={4}
+                  placeholder="Describe the product, brand preference, specifications, or any other procurement requirements."
+                  className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
+                  rows={5}
                   value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="text-white/60 text-sm mb-2 block">Quantity Required</label>
+                  <label className="mb-2 block text-sm text-slate-400">Quantity Required</label>
                   <input
                     type="number"
                     placeholder="e.g. 10"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                    className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
                     value={formData.quantity}
-                    onChange={(e) => setFormData({...formData, quantity: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="text-white/60 text-sm mb-2 block">Urgency</label>
+                  <label className="mb-2 block text-sm text-slate-400">Urgency</label>
                   <select
-                    className="w-full bg-[#0a1628] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition"
+                    className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 transition focus:border-slate-600 focus:outline-none"
                     value={formData.urgency}
-                    onChange={(e) => setFormData({...formData, urgency: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, urgency: e.target.value })}
                   >
-                    <option value="low">Low — Within a month</option>
-                    <option value="normal">Normal — Within 2 weeks</option>
-                    <option value="high">High — Within a week</option>
-                    <option value="urgent">Urgent — Within 48 hours</option>
+                    <option value="low" className="bg-[#09111a]">Low, within a month</option>
+                    <option value="normal" className="bg-[#09111a]">Normal, within 2 weeks</option>
+                    <option value="high" className="bg-[#09111a]">High, within a week</option>
+                    <option value="urgent" className="bg-[#09111a]">Urgent, within 48 hours</option>
                   </select>
                 </div>
               </div>
 
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-semibold transition shadow-lg shadow-blue-500/25"
-              >
-                {loading ? 'Submitting...' : 'Submit Request →'}
-              </button>
+              <div className="rounded-[28px] border border-slate-800 bg-[#09111a] p-5">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Submission</p>
+                <p className="mt-2 text-sm text-slate-400">
+                  Submit as much detail as possible so suppliers can assess sourcing speed, quantity availability, and specification match.
+                </p>
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="mt-5 w-full rounded-xl bg-slate-100 py-4 font-semibold text-slate-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {loading ? 'Submitting...' : 'Submit Request'}
+                </button>
+              </div>
             </div>
           </div>
         )}

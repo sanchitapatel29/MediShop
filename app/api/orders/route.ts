@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { getMultipleOrderDetails, saveOrderDetails } from '@/lib/order-details-store'
 import { prisma } from '@/lib/prisma'
 import jwt from 'jsonwebtoken'
+
+type OrderProduct = {
+  id: number
+  name: string
+  stock: number
+  added_by: number | null
+}
 
 export async function POST(request: Request) {
   try {
@@ -10,6 +18,10 @@ export async function POST(request: Request) {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number }
     const { items, totalPrice, paymentType, deliveryDetails } = await request.json()
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ error: 'Your cart is empty' }, { status: 400 })
+    }
 
     const requiredFields = [
       'fullName',
@@ -30,22 +42,74 @@ export async function POST(request: Request) {
     }
 
     const amountPaid = paymentType === 'split' ? totalPrice * 0.6 : totalPrice
+    const typedItems = items as { productId: number, quantity: number, price: number }[]
+    const productIds = typedItems.map((item) => item.productId)
 
-    const order = await prisma.order.create({
-      data: {
-        user_id: decoded.userId,
-        total_price: totalPrice,
-        amount_paid: amountPaid,
-        payment_type: paymentType || 'full',
-        status: 'pending',
-        items: {
-          create: items.map((item: { productId: number, quantity: number, price: number }) => ({
-            product_id: item.productId,
-            quantity: item.quantity,
-            price: item.price
-          }))
+    const products: OrderProduct[] = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, name: true, stock: true, added_by: true }
+    })
+    const productMap = new Map<number, OrderProduct>(
+      products.map((product: OrderProduct) => [product.id, product])
+    )
+
+    for (const item of typedItems) {
+      const product = productMap.get(item.productId)
+
+      if (!product) {
+        return NextResponse.json({ error: 'One or more products were not found' }, { status: 404 })
+      }
+
+      if (item.quantity <= 0) {
+        return NextResponse.json({ error: `Invalid quantity for ${product.name}` }, { status: 400 })
+      }
+
+      if (product.stock <= 0) {
+        return NextResponse.json({ error: `${product.name} is out of stock` }, { status: 400 })
+      }
+
+      if (item.quantity > product.stock) {
+        return NextResponse.json(
+          { error: `Only ${product.stock} unit(s) left for ${product.name}` },
+          { status: 400 }
+        )
+      }
+    }
+
+    const order = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      for (const item of typedItems) {
+        const updated = await tx.product.updateMany({
+          where: {
+            id: item.productId,
+            stock: { gte: item.quantity }
+          },
+          data: {
+            stock: { decrement: item.quantity }
+          }
+        })
+
+        if (updated.count === 0) {
+          const product = productMap.get(item.productId)
+          throw new Error(product ? `${product.name} is no longer available in that quantity` : 'Stock update failed')
         }
       }
+
+      return tx.order.create({
+        data: {
+          user_id: decoded.userId,
+          total_price: totalPrice,
+          amount_paid: amountPaid,
+          payment_type: paymentType || 'full',
+          status: 'pending',
+          items: {
+            create: typedItems.map((item) => ({
+              product_id: item.productId,
+              quantity: item.quantity,
+              price: item.price
+            }))
+          }
+        }
+      })
     })
 
     let deliveryDetailsSaved = true
@@ -69,44 +133,33 @@ export async function POST(request: Request) {
       deliveryDetailsSaved = false
     }
 
-    // Reduce stock and notify admins
     const adminNotifications = new Map<number, { productNames: string[], totalItems: number }>()
-    
-    for (const item of items) {
-      await prisma.product.update({
-        where: { id: item.productId },
-        data: { stock: { decrement: item.quantity } }
-      })
-      
-      // Get product details to find admin
-      const product = await prisma.product.findUnique({
-        where: { id: item.productId },
-        select: { added_by: true, name: true }
-      })
-      
+
+    for (const item of typedItems) {
+      const product = productMap.get(item.productId)
+
       if (product?.added_by) {
         if (!adminNotifications.has(product.added_by)) {
           adminNotifications.set(product.added_by, { productNames: [], totalItems: 0 })
         }
+
         const adminData = adminNotifications.get(product.added_by)!
         adminData.productNames.push(product.name)
         adminData.totalItems += item.quantity
       }
     }
 
-    // Create notifications for each admin who has products in the order
     for (const [adminId, data] of adminNotifications) {
       await prisma.notification.create({
         data: {
           user_id: adminId,
-          title: '🛒 New Order Received',
+          title: 'New Order Received',
           message: `Order #${order.id} placed for ${data.totalItems} item(s): ${data.productNames.join(', ')}`,
           type: 'order'
         }
       })
     }
 
-    // Also notify ALL admins about the order (for those who didn't add products)
     const allAdmins = await prisma.user.findMany({
       where: { role: 'admin' },
       select: { id: true }
@@ -118,8 +171,8 @@ export async function POST(request: Request) {
         await prisma.notification.create({
           data: {
             user_id: admin.id,
-            title: '🛒 New Order Received',
-            message: `Order #${order.id} placed with ${items.length} item(s)`,
+            title: 'New Order Received',
+            message: `Order #${order.id} placed with ${typedItems.length} item(s)`,
             type: 'order'
           }
         })
@@ -131,8 +184,9 @@ export async function POST(request: Request) {
       order,
       deliveryDetailsSaved
     })
-  } catch {
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Something went wrong'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 

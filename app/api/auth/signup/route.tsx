@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 export async function POST(request:Request) {
   try {
     const body = await request.json()
-    const { name, email, password, hospital_name, role } = body
+    const { name, email, password, hospital_name } = body
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -19,9 +19,6 @@ export async function POST(request:Request) {
       )
     }
 
-    // Validate role
-    const userRole = role === 'admin' ? 'admin' : 'doctor'
-
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10)
 
@@ -32,7 +29,7 @@ export async function POST(request:Request) {
         email,
         password: hashedPassword,
         hospital_name,
-        role: userRole
+        role: 'doctor'
       }
     })
 
@@ -46,7 +43,7 @@ export async function POST(request:Request) {
       }
     })
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Something went wrong' },
       { status: 500 }

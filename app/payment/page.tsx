@@ -28,8 +28,7 @@ export default function Payment() {
 
   const handlePayment = async () => {
     setStep('processing')
-    // Simulate payment processing delay
-    await new Promise(resolve => setTimeout(resolve, 2500))
+    await new Promise((resolve) => setTimeout(resolve, 2500))
     localStorage.removeItem('pendingPayment')
     localStorage.removeItem('cart')
     setStep('success')
@@ -45,11 +44,11 @@ export default function Payment() {
 
   if (step === 'processing') {
     return (
-      <main className="min-h-screen bg-[#0a1628] text-white flex items-center justify-center px-4">
+      <main className="app-shell flex min-h-screen items-center justify-center px-4 text-slate-100">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6" />
-          <h2 className="text-2xl font-bold mb-2">Processing Payment</h2>
-          <p className="text-white/40">Please wait, do not close this page...</p>
+          <div className="mx-auto mb-6 h-16 w-16 animate-spin rounded-full border-4 border-slate-300 border-t-transparent" />
+          <h2 className="text-2xl font-semibold tracking-tight">Processing Payment</h2>
+          <p className="mt-2 text-slate-400">Please wait while your transaction is being confirmed.</p>
         </div>
       </main>
     )
@@ -57,19 +56,19 @@ export default function Payment() {
 
   if (step === 'success') {
     return (
-      <main className="min-h-screen bg-[#0a1628] text-white flex items-center justify-center px-4">
-        <div className="text-center max-w-md px-4 sm:px-8">
-          <div className="w-20 h-20 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
-            <span className="text-4xl">✓</span>
+      <main className="app-shell flex min-h-screen items-center justify-center px-4 text-slate-100">
+        <div className="w-full max-w-md rounded-[32px] border border-slate-800 bg-slate-950/55 p-8 text-center shadow-[0_30px_80px_rgba(2,6,23,0.28)]">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-sm font-semibold tracking-[0.3em] text-emerald-200">
+            OK
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold text-green-400 mb-2">Payment Successful!</h2>
-          <p className="text-white/40 mb-2">Order #{orderId} confirmed</p>
-          <p className="text-white/40 mb-8">₹{amount.toLocaleString()} paid successfully</p>
+          <h2 className="text-3xl font-semibold tracking-tight text-slate-100">Payment Successful</h2>
+          <p className="mt-2 text-slate-400">Order #{orderId} confirmed</p>
+          <p className="mt-2 text-slate-300">₹{amount.toLocaleString()} paid successfully</p>
           <button
             onClick={() => router.push('/orders')}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-semibold transition"
+            className="mt-8 w-full rounded-xl bg-slate-100 py-4 font-semibold text-slate-950 transition hover:bg-white"
           >
-            View My Orders →
+            View My Orders
           </button>
         </div>
       </main>
@@ -77,129 +76,126 @@ export default function Payment() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a1628] text-white">
-      <nav className="bg-[#0d1f3c] border-b border-white/10 px-4 md:px-8 py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">M</span>
+    <main className="app-shell min-h-screen text-slate-100">
+      <nav className="border-b border-white/10 bg-[#0b1623]/90 px-4 py-4 backdrop-blur-xl md:px-8">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-100 text-sm font-bold text-slate-900">
+              M
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">Secure Checkout</p>
+              <span className="text-xl font-semibold tracking-tight">Payment</span>
+            </div>
           </div>
-          <span className="text-xl font-bold">MediShop</span>
-          <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full border border-green-500/30">
-            🔒 Secure Payment
+          <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-emerald-200">
+            Secure Session
           </span>
         </div>
       </nav>
 
-      <div className="max-w-md mx-auto px-4 md:px-8 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold mb-1">Complete Payment</h1>
-          <p className="text-white/40 text-sm">Order #{orderId}</p>
-        </div>
-
-        {/* Amount */}
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 mb-6 flex flex-col gap-2 sm:flex-row sm:justify-between sm:items-center">
-          <span className="text-white/60">Amount to Pay</span>
-          <span className="text-2xl font-bold text-blue-400">₹{amount.toLocaleString()}</span>
-        </div>
-
-        {/* Payment Method Tabs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-6">
-          <button
-            onClick={() => setPaymentMethod('card')}
-            className={`flex-1 py-3 rounded-xl text-sm font-medium transition border ${
-              paymentMethod === 'card'
-                ? 'bg-blue-600 border-blue-600 text-white'
-                : 'bg-white/5 border-white/10 text-white/60 hover:border-white/20'
-            }`}
-          >
-            💳 Card
-          </button>
-          <button
-            onClick={() => setPaymentMethod('upi')}
-            className={`flex-1 py-3 rounded-xl text-sm font-medium transition border ${
-              paymentMethod === 'upi'
-                ? 'bg-blue-600 border-blue-600 text-white'
-                : 'bg-white/5 border-white/10 text-white/60 hover:border-white/20'
-            }`}
-          >
-            📱 UPI
-          </button>
-        </div>
-
-        {/* Card Form */}
-        {paymentMethod === 'card' && (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4">
+      <div className="mx-auto max-w-4xl px-4 py-8 md:px-8">
+        <section className="mb-8 rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(9,18,29,0.78))] p-6 shadow-[0_32px_90px_rgba(2,6,23,0.34)] md:p-8">
+          <p className="text-xs uppercase tracking-[0.34em] text-slate-400">Payment Confirmation</p>
+          <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <label className="text-white/60 text-sm mb-2 block">Card Number</label>
+              <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Complete payment for your confirmed order.</h1>
+              <p className="mt-3 text-sm leading-relaxed text-slate-400 md:text-base">
+                Order #{orderId} is ready for payment. Choose card or UPI and confirm the due amount securely.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/40 px-4 py-3 text-sm text-slate-300">
+              Amount due: <span className="font-semibold text-slate-100">₹{amount.toLocaleString()}</span>
+            </div>
+          </div>
+        </section>
+
+        <div className="rounded-[32px] border border-slate-800 bg-slate-950/45 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.2)] md:p-7">
+          <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <button
+              onClick={() => setPaymentMethod('card')}
+              className={`rounded-2xl border p-4 text-left transition ${
+                paymentMethod === 'card'
+                  ? 'border-slate-600 bg-slate-100 text-slate-950'
+                  : 'border-slate-800 bg-[#09111a] text-slate-300 hover:border-slate-700'
+              }`}
+            >
+              <p className="text-sm font-semibold">Card Payment</p>
+              <p className={`mt-1 text-xs ${paymentMethod === 'card' ? 'text-slate-700' : 'text-slate-500'}`}>Use debit or credit card</p>
+            </button>
+            <button
+              onClick={() => setPaymentMethod('upi')}
+              className={`rounded-2xl border p-4 text-left transition ${
+                paymentMethod === 'upi'
+                  ? 'border-slate-600 bg-slate-100 text-slate-950'
+                  : 'border-slate-800 bg-[#09111a] text-slate-300 hover:border-slate-700'
+              }`}
+            >
+              <p className="text-sm font-semibold">UPI</p>
+              <p className={`mt-1 text-xs ${paymentMethod === 'upi' ? 'text-slate-700' : 'text-slate-500'}`}>Pay using UPI ID</p>
+            </button>
+          </div>
+
+          {paymentMethod === 'card' && (
+            <div className="space-y-4">
               <input
                 type="text"
-                placeholder="1234 5678 9012 3456"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                placeholder="Card Number"
+                className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
                 value={formData.cardNumber}
-                onChange={(e) => setFormData({...formData, cardNumber: formatCardNumber(e.target.value)})}
+                onChange={(e) => setFormData({ ...formData, cardNumber: formatCardNumber(e.target.value) })}
               />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-white/60 text-sm mb-2 block">Expiry</label>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <input
                   type="text"
                   placeholder="MM/YY"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
                   value={formData.expiry}
-                  onChange={(e) => setFormData({...formData, expiry: formatExpiry(e.target.value)})}
+                  onChange={(e) => setFormData({ ...formData, expiry: formatExpiry(e.target.value) })}
                 />
-              </div>
-              <div>
-                <label className="text-white/60 text-sm mb-2 block">CVV</label>
                 <input
                   type="password"
-                  placeholder="•••"
+                  placeholder="CVV"
                   maxLength={3}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                  className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
                   value={formData.cvv}
-                  onChange={(e) => setFormData({...formData, cvv: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, cvv: e.target.value })}
                 />
               </div>
-            </div>
-            <div>
-              <label className="text-white/60 text-sm mb-2 block">Name on Card</label>
               <input
                 type="text"
-                placeholder="Dr. John Smith"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                placeholder="Name on Card"
+                className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
+          )}
+
+          {paymentMethod === 'upi' && (
+            <div className="space-y-3">
+              <input
+                type="text"
+                placeholder="yourname@upi"
+                className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
+                value={formData.upi}
+                onChange={(e) => setFormData({ ...formData, upi: e.target.value })}
+              />
+              <p className="text-xs text-slate-500">Enter your UPI ID to proceed with payment.</p>
+            </div>
+          )}
+
+          <div className="mt-6 rounded-[28px] border border-slate-800 bg-[#09111a] p-5">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Amount to Pay</p>
+            <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-100">₹{amount.toLocaleString()}</p>
+            <button
+              onClick={handlePayment}
+              className="mt-5 w-full rounded-xl bg-slate-100 py-4 text-base font-semibold text-slate-950 transition hover:bg-white"
+            >
+              Pay ₹{amount.toLocaleString()}
+            </button>
           </div>
-        )}
-
-        {/* UPI Form */}
-        {paymentMethod === 'upi' && (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <label className="text-white/60 text-sm mb-2 block">UPI ID</label>
-            <input
-              type="text"
-              placeholder="yourname@upi"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
-              value={formData.upi}
-              onChange={(e) => setFormData({...formData, upi: e.target.value})}
-            />
-            <p className="text-white/30 text-xs mt-3">Enter your UPI ID to proceed with payment</p>
-          </div>
-        )}
-
-        <button
-          onClick={handlePayment}
-          className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-semibold text-lg transition shadow-lg shadow-blue-500/25 mt-6"
-        >
-          Pay ₹{amount.toLocaleString()} →
-        </button>
-
-        <p className="text-center text-white/30 text-xs mt-4">
-          🔒 Your payment is secured with 256-bit SSL encryption
-        </p>
+        </div>
       </div>
     </main>
   )

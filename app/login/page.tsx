@@ -16,7 +16,7 @@ export default function Login() {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
+      body: JSON.stringify({ ...formData, portal: 'doctor' })
     })
 
     const data = await res.json()
@@ -25,89 +25,101 @@ export default function Login() {
     if (res.ok) {
       Cookies.set('token', data.token)
       Cookies.set('role', data.user.role)
-      if (data.user.role === 'admin') {
-        router.push('/admin')
-      } else {
-        router.push('/products')
-      }
+      router.push('/products')
     } else {
       setError(data.error)
     }
   }
 
   return (
-    <main className="min-h-screen bg-[#0a1628] flex items-center justify-center relative overflow-hidden px-4 py-8">
-      {/* Background grid */}
-      <div className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage: 'linear-gradient(#1e40af 1px, transparent 1px), linear-gradient(90deg, #1e40af 1px, transparent 1px)',
-          backgroundSize: '60px 60px'
-        }}
-      />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-blue-500 opacity-10 blur-[120px] rounded-full" />
+    <main className="app-shell min-h-screen px-4 py-8 text-slate-100">
+      <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl items-center gap-8 lg:grid-cols-[1.08fr_0.92fr]">
+        <section className="rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.94),rgba(9,18,29,0.78))] p-8 shadow-[0_40px_100px_rgba(2,6,23,0.38)] md:p-10">
+          <p className="text-xs uppercase tracking-[0.34em] text-slate-400">Buyer Access</p>
+          <h1 className="mt-4 max-w-xl text-4xl font-semibold tracking-tight md:text-5xl">
+            Procurement sign in built for healthcare teams.
+          </h1>
+          <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-400">
+            Access your procurement workspace, manage repeat purchases, and review institutional orders from a cleaner B2B console.
+          </p>
 
-      <div className="relative z-10 w-full max-w-md px-2 sm:px-6 md:px-8">
-        {/* Logo */}
-        <div className="text-center mb-6 md:mb-8">
-          <div className="inline-flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold">M</span>
-            </div>
-            <span className="text-2xl font-bold text-white">MediShop</span>
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            {[
+              { label: 'Orders', value: 'Live tracking' },
+              { label: 'Catalog', value: 'Verified supply' },
+              { label: 'Payments', value: 'Institution ready' },
+            ].map((item) => (
+              <div key={item.label} className="rounded-2xl border border-slate-800 bg-slate-950/35 p-4">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{item.label}</p>
+                <p className="mt-2 text-sm font-medium text-slate-100">{item.value}</p>
+              </div>
+            ))}
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Welcome back</h2>
-          <p className="text-white/50">Sign in to your procurement account</p>
-        </div>
+        </section>
 
-        {/* Form */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-6 md:p-8 backdrop-blur-sm">
+        <section className="rounded-[32px] border border-slate-800 bg-slate-950/55 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.26)] sm:p-8">
+          <div className="mb-8 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-100 text-sm font-bold text-slate-900">
+              M
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">MediShop</p>
+              <p className="text-xl font-semibold text-slate-100">Customer Sign In</p>
+            </div>
+          </div>
+
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6 text-sm">
+            <div className="mb-6 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
               {error}
             </div>
           )}
 
           <div className="space-y-4">
             <div>
-              <label className="text-white/60 text-sm mb-2 block">Email Address</label>
+              <label className="mb-2 block text-sm text-slate-400">Email Address</label>
               <input
                 type="email"
                 placeholder="doctor@hospital.com"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
                 value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
             <div>
-              <label className="text-white/60 text-sm mb-2 block">Password</label>
+              <label className="mb-2 block text-sm text-slate-400">Password</label>
               <input
                 type="password"
-                placeholder="••••••••"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-blue-500 transition"
+                placeholder="Enter your password"
+                className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
                 value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               />
             </div>
 
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-semibold transition shadow-lg shadow-blue-500/25 mt-2"
+              className="mt-2 w-full rounded-xl bg-slate-100 py-3 font-semibold text-slate-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {loading ? 'Signing in...' : 'Sign In →'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </div>
-        </div>
 
-        <p className="text-center text-white/40 mt-6 text-sm">
-          Don&apos;t have an account?{' '}
-          <span
-            onClick={() => router.push('/signup')}
-            className="text-blue-400 cursor-pointer hover:text-blue-300 transition"
-          >
-            Create one
-          </span>
-        </p>
+          <div className="mt-8 space-y-3 text-sm">
+            <p className="text-slate-400">
+              Don&apos;t have an account?{' '}
+              <button onClick={() => router.push('/signup')} className="text-slate-100 transition hover:text-white">
+                Create one
+              </button>
+            </p>
+            <p className="text-slate-500">
+              Supplier or admin?{' '}
+              <button onClick={() => router.push('/admin/login')} className="text-slate-300 transition hover:text-white">
+                Open admin portal
+              </button>
+            </p>
+          </div>
+        </section>
       </div>
     </main>
   )

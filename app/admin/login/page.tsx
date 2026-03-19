@@ -1,15 +1,11 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Cookies from 'js-cookie'
 
-export default function Signup() {
+export default function AdminLogin() {
   const router = useRouter()
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    hospital_name: ''
-  })
+  const [formData, setFormData] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -17,17 +13,19 @@ export default function Signup() {
     setLoading(true)
     setError('')
 
-    const res = await fetch('/api/auth/signup', {
+    const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
+      body: JSON.stringify({ ...formData, portal: 'admin' })
     })
 
     const data = await res.json()
     setLoading(false)
 
     if (res.ok) {
-      router.push('/login')
+      Cookies.set('token', data.token)
+      Cookies.set('role', data.user.role)
+      router.push('/admin')
     } else {
       setError(data.error)
     }
@@ -35,25 +33,25 @@ export default function Signup() {
 
   return (
     <main className="app-shell min-h-screen px-4 py-8 text-slate-100">
-      <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl items-center gap-8 lg:grid-cols-[1.02fr_0.98fr]">
-        <section className="rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(14,23,39,0.94),rgba(9,18,29,0.8))] p-8 shadow-[0_40px_100px_rgba(2,6,23,0.38)] md:p-10">
-          <p className="text-xs uppercase tracking-[0.34em] text-slate-400">Buyer Onboarding</p>
+      <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+        <section className="rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(11,22,35,0.96),rgba(8,17,27,0.82))] p-8 shadow-[0_40px_100px_rgba(2,6,23,0.4)] md:p-10">
+          <p className="text-xs uppercase tracking-[0.34em] text-slate-400">Restricted Access</p>
           <h1 className="mt-4 max-w-xl text-4xl font-semibold tracking-tight md:text-5xl">
-            Open a procurement account for your hospital or clinic.
+            Supplier and operations access for marketplace management.
           </h1>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-400">
-            Create a buyer account to place institutional orders, request unavailable equipment, and manage procurement activity in one place.
+            Use the admin portal to manage listings, orders, notifications, and procurement requests. Public buyer accounts should use the customer login instead.
           </p>
 
           <div className="mt-10 space-y-4">
             {[
-              'Browse products listed by approved suppliers',
-              'Place orders with full or split payment',
-              'Track requests and procurement history',
+              'Monitor active inventory and stock movement',
+              'Review and fulfill institutional orders',
+              'Respond to incoming sourcing requests',
             ].map((item) => (
               <div key={item} className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-4">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-[11px] font-semibold tracking-[0.18em] text-slate-300">
-                  OK
+                  AD
                 </span>
                 <p className="text-sm text-slate-200">{item}</p>
               </div>
@@ -68,7 +66,7 @@ export default function Signup() {
             </div>
             <div>
               <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">MediShop</p>
-              <p className="text-xl font-semibold text-slate-100">Create Buyer Account</p>
+              <p className="text-xl font-semibold text-slate-100">Admin Portal</p>
             </div>
           </div>
 
@@ -80,20 +78,10 @@ export default function Signup() {
 
           <div className="space-y-4">
             <div>
-              <label className="mb-2 block text-sm text-slate-400">Full Name</label>
-              <input
-                type="text"
-                placeholder="Dr. John Smith"
-                className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm text-slate-400">Email Address</label>
+              <label className="mb-2 block text-sm text-slate-400">Admin Email</label>
               <input
                 type="email"
-                placeholder="doctor@hospital.com"
+                placeholder="supplier@company.com"
                 className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -103,25 +91,11 @@ export default function Signup() {
               <label className="mb-2 block text-sm text-slate-400">Password</label>
               <input
                 type="password"
-                placeholder="Create a secure password"
+                placeholder="Enter your password"
                 className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm text-slate-400">Hospital / Clinic Name</label>
-              <input
-                type="text"
-                placeholder="City General Hospital"
-                className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
-                value={formData.hospital_name}
-                onChange={(e) => setFormData({ ...formData, hospital_name: e.target.value })}
-              />
-            </div>
-
-            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-4 text-sm text-amber-100">
-              Supplier and admin accounts are managed separately through the admin portal.
             </div>
 
             <button
@@ -129,21 +103,15 @@ export default function Signup() {
               disabled={loading}
               className="mt-2 w-full rounded-xl bg-slate-100 py-3 font-semibold text-slate-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? 'Signing in...' : 'Enter Admin Dashboard'}
             </button>
           </div>
 
           <div className="mt-8 space-y-3 text-sm">
             <p className="text-slate-400">
-              Already have an account?{' '}
+              Customer account?{' '}
               <button onClick={() => router.push('/login')} className="text-slate-100 transition hover:text-white">
-                Sign in
-              </button>
-            </p>
-            <p className="text-slate-500">
-              Need seller access?{' '}
-              <button onClick={() => router.push('/admin/login')} className="text-slate-300 transition hover:text-white">
-                Open admin portal
+                Use customer login
               </button>
             </p>
           </div>

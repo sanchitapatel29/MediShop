@@ -46,8 +46,13 @@ export default function Cart() {
 
   const updateQuantity = (id: number, quantity: number) => {
     const updated = cart
-      .map((item) => (item.id === id ? { ...item, quantity } : item))
+      .map((item) => {
+        if (item.id !== id) return item;
+        const nextQuantity = Math.min(Math.max(quantity, 0), item.stock);
+        return { ...item, quantity: nextQuantity };
+      })
       .filter((item) => item.quantity > 0);
+
     setCart(updated);
     localStorage.setItem("cart", JSON.stringify(updated));
   };
@@ -103,266 +108,252 @@ export default function Cart() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a1628] text-white">
-      <nav className="flex flex-col gap-3 border-b border-white/10 bg-[#0d1f3c] px-4 py-4 sm:flex-row sm:items-center sm:justify-between md:px-8">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500">
-            <span className="text-sm font-bold text-white">M</span>
+    <main className="app-shell min-h-screen text-slate-100">
+      <nav className="border-b border-white/10 bg-[#0b1623]/90 px-4 py-4 backdrop-blur-xl md:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-100 text-sm font-bold text-slate-900">
+              M
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">Checkout Workspace</p>
+              <span className="text-xl font-semibold tracking-tight">Your Cart</span>
+            </div>
           </div>
-          <span className="text-xl font-bold">MediShop</span>
+          <button
+            onClick={() => router.push("/products")}
+            className="rounded-xl border border-slate-800 bg-slate-950/45 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-700 hover:text-white"
+          >
+            Back to Products
+          </button>
         </div>
-        <button
-          onClick={() => router.push("/products")}
-          className="text-sm text-white/60 transition hover:text-white"
-        >
-          Back to Products
-        </button>
       </nav>
 
-      <div className="mx-auto max-w-3xl px-4 py-6 md:px-8 md:py-8">
-        <div className="mb-8">
-          <h1 className="mb-1 text-2xl font-bold md:text-3xl">Your Cart</h1>
-          <p className="text-white/40">
-            {cart.length} item{cart.length !== 1 ? "s" : ""}
-          </p>
-        </div>
+      <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
+        <section className="mb-8 rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(9,18,29,0.78))] p-6 shadow-[0_32px_90px_rgba(2,6,23,0.34)] md:p-8">
+          <p className="text-xs uppercase tracking-[0.34em] text-slate-400">Order Review</p>
+          <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Finalize delivery, billing, and payment details.</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400 md:text-base">
+                Review your cart, confirm delivery information, and choose the payment structure that matches your procurement process.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/40 px-4 py-3 text-sm text-slate-300">
+              {cart.length} item{cart.length !== 1 ? "s" : ""} in cart
+            </div>
+          </div>
+        </section>
 
         {message && (
           <div
-            className={`mb-6 rounded-xl p-4 ${
+            className={`mb-6 rounded-2xl border px-4 py-4 text-sm ${
               messageType === "success"
-                ? "border border-green-500/20 bg-green-500/10 text-green-400"
-                : "border border-red-500/20 bg-red-500/10 text-red-400"
+                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-200"
+                : "border-red-500/20 bg-red-500/10 text-red-200"
             }`}
           >
-            {messageType === "success" ? "Success:" : "Error:"} {message}
+            {message}
           </div>
         )}
 
         {cart.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-16 text-center">
-            <p className="mb-4 text-5xl">Cart</p>
-            <p className="mb-6 text-white/40">Your cart is empty</p>
+          <div className="rounded-[32px] border border-slate-800 bg-slate-950/45 p-16 text-center shadow-[0_24px_70px_rgba(2,6,23,0.2)]">
+            <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Cart</p>
+            <p className="mt-4 text-2xl font-semibold tracking-tight text-slate-100">Your cart is empty</p>
+            <p className="mt-3 text-slate-400">Add products to begin checkout.</p>
             <button
               onClick={() => router.push("/products")}
-              className="rounded-xl bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-500"
+              className="mt-6 rounded-xl bg-slate-100 px-6 py-3 font-semibold text-slate-950 transition hover:bg-white"
             >
               Browse Products
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {cart.map((item) => (
-              <div
-                key={item.id}
-                className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 md:flex-row md:justify-between md:p-6"
-              >
+          <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <section className="space-y-4">
+              {cart.map((item) => (
+                <article
+                  key={item.id}
+                  className="rounded-[28px] border border-slate-800 bg-slate-950/42 p-5 shadow-[0_18px_44px_rgba(2,6,23,0.18)]"
+                >
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-lg font-semibold tracking-tight text-slate-100">{item.name}</p>
+                      <p className="mt-1 text-sm text-slate-400">₹{item.price.toLocaleString()} each</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {item.stock > 0 ? `${item.stock} available` : "Out of stock"}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-5">
+                      <div className="flex items-center gap-3 rounded-xl border border-slate-800 bg-[#09111a] px-3 py-2">
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 text-lg text-slate-300 transition hover:border-slate-700 hover:text-white"
+                        >
+                          -
+                        </button>
+                        <span className="w-8 text-center font-semibold">{item.quantity}</span>
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          disabled={item.quantity >= item.stock}
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-800 text-lg text-slate-300 transition hover:border-slate-700 hover:text-white disabled:cursor-not-allowed disabled:text-slate-600"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <p className="text-lg font-semibold text-slate-100">
+                        ₹{(item.price * item.quantity).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </section>
+
+            <section className="rounded-[32px] border border-slate-800 bg-slate-950/45 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.2)] md:p-7">
+              <div className="space-y-8">
                 <div>
-                  <h3 className="mb-1 font-semibold text-white">{item.name}</h3>
-                  <p className="text-sm text-blue-400">Rs {item.price} each</p>
+                  <div className="mb-4 border-b border-white/8 pb-4">
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">Delivery Information</p>
+                    <h2 className="mt-2 text-xl font-semibold tracking-tight">Delivery Details</h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {[
+                      ["fullName", "Full Name"],
+                      ["phone", "Phone Number"],
+                      ["email", "Email Address"],
+                      ["companyName", "Hospital / Company Name"],
+                      ["addressLine1", "Address Line 1"],
+                      ["addressLine2", "Address Line 2"],
+                      ["city", "City"],
+                      ["state", "State"],
+                      ["postalCode", "Postal Code"],
+                      ["country", "Country"],
+                    ].map(([key, label]) => (
+                      <input
+                        key={key}
+                        type="text"
+                        placeholder={label}
+                        className={`w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none ${
+                          key === "addressLine1" || key === "addressLine2" ? "md:col-span-2" : ""
+                        }`}
+                        value={deliveryDetails[key as keyof typeof deliveryDetails]}
+                        onChange={(e) =>
+                          setDeliveryDetails({ ...deliveryDetails, [key]: e.target.value })
+                        }
+                      />
+                    ))}
+                  </div>
                 </div>
-                <div className="flex items-center justify-between md:gap-6">
-                  <div className="flex items-center gap-3">
+
+                <div>
+                  <div className="mb-4 border-b border-white/8 pb-4">
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">Billing</p>
+                    <h2 className="mt-2 text-xl font-semibold tracking-tight">Billing Details</h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <input
+                      type="text"
+                      placeholder="Billing Name"
+                      className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
+                      value={deliveryDetails.billingName}
+                      onChange={(e) => setDeliveryDetails({ ...deliveryDetails, billingName: e.target.value })}
+                    />
+                    <input
+                      type="text"
+                      placeholder="GSTIN / Tax ID (optional)"
+                      className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
+                      value={deliveryDetails.billingGstin}
+                      onChange={(e) => setDeliveryDetails({ ...deliveryDetails, billingGstin: e.target.value })}
+                    />
+                    <textarea
+                      placeholder="Billing Address"
+                      className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none md:col-span-2"
+                      rows={3}
+                      value={deliveryDetails.billingAddress}
+                      onChange={(e) => setDeliveryDetails({ ...deliveryDetails, billingAddress: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-4 border-b border-white/8 pb-4">
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">Payment Structure</p>
+                    <h2 className="mt-2 text-xl font-semibold tracking-tight">Payment Option</h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 font-bold transition hover:bg-white/20"
+                      onClick={() => setPaymentType("full")}
+                      className={`rounded-2xl border p-4 text-left transition ${
+                        paymentType === "full"
+                          ? "border-slate-600 bg-slate-100 text-slate-950"
+                          : "border-slate-800 bg-[#09111a] text-slate-300 hover:border-slate-700"
+                      }`}
                     >
-                      -
+                      <p className="text-sm font-semibold">Full Payment</p>
+                      <p className={`mt-1 text-xs ${paymentType === "full" ? "text-slate-700" : "text-slate-500"}`}>Pay 100% now</p>
                     </button>
-                    <span className="w-8 text-center font-semibold">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 font-bold transition hover:bg-white/20"
+                      onClick={() => setPaymentType("split")}
+                      className={`rounded-2xl border p-4 text-left transition ${
+                        paymentType === "split"
+                          ? "border-slate-600 bg-slate-100 text-slate-950"
+                          : "border-slate-800 bg-[#09111a] text-slate-300 hover:border-slate-700"
+                      }`}
                     >
-                      +
+                      <p className="text-sm font-semibold">Split Payment</p>
+                      <p className={`mt-1 text-xs ${paymentType === "split" ? "text-slate-700" : "text-slate-500"}`}>60% now, 40% on delivery</p>
                     </button>
                   </div>
-                  <p className="font-bold text-white">
-                    Rs {(item.price * item.quantity).toLocaleString()}
-                  </p>
                 </div>
-              </div>
-            ))}
 
-            <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-6">
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/60">
-                Delivery Details
-              </h3>
-
-              <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <input
-                  type="text"
-                  placeholder="Full Name"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 transition focus:border-blue-500 focus:outline-none"
-                  value={deliveryDetails.fullName}
-                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, fullName: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="Phone Number"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 transition focus:border-blue-500 focus:outline-none"
-                  value={deliveryDetails.phone}
-                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, phone: e.target.value })}
-                />
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 transition focus:border-blue-500 focus:outline-none"
-                  value={deliveryDetails.email}
-                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, email: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="Hospital / Company Name"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 transition focus:border-blue-500 focus:outline-none"
-                  value={deliveryDetails.companyName}
-                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, companyName: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="Address Line 1"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 transition focus:border-blue-500 focus:outline-none md:col-span-2"
-                  value={deliveryDetails.addressLine1}
-                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, addressLine1: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="Address Line 2"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 transition focus:border-blue-500 focus:outline-none md:col-span-2"
-                  value={deliveryDetails.addressLine2}
-                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, addressLine2: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="City"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 transition focus:border-blue-500 focus:outline-none"
-                  value={deliveryDetails.city}
-                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, city: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="State"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 transition focus:border-blue-500 focus:outline-none"
-                  value={deliveryDetails.state}
-                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, state: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="Postal Code"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 transition focus:border-blue-500 focus:outline-none"
-                  value={deliveryDetails.postalCode}
-                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, postalCode: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="Country"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 transition focus:border-blue-500 focus:outline-none"
-                  value={deliveryDetails.country}
-                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, country: e.target.value })}
-                />
-              </div>
-
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/60">
-                Billing Details
-              </h3>
-
-              <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <input
-                  type="text"
-                  placeholder="Billing Name"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 transition focus:border-blue-500 focus:outline-none"
-                  value={deliveryDetails.billingName}
-                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, billingName: e.target.value })}
-                />
-                <input
-                  type="text"
-                  placeholder="GSTIN / Tax ID (optional)"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 transition focus:border-blue-500 focus:outline-none"
-                  value={deliveryDetails.billingGstin}
-                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, billingGstin: e.target.value })}
-                />
-                <textarea
-                  placeholder="Billing Address"
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 transition focus:border-blue-500 focus:outline-none md:col-span-2"
-                  rows={3}
-                  value={deliveryDetails.billingAddress}
-                  onChange={(e) => setDeliveryDetails({ ...deliveryDetails, billingAddress: e.target.value })}
-                />
-              </div>
-
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-white/60">
-                Payment Option
-              </h3>
-
-              <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <button
-                  onClick={() => setPaymentType("full")}
-                  className={`rounded-xl border p-4 text-left transition ${
-                    paymentType === "full"
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-white/10 bg-white/5 hover:border-white/20"
-                  }`}
-                >
-                  <p className="text-sm font-semibold text-white">Full Payment</p>
-                  <p className="mt-1 text-xs text-white/40">Pay 100% now</p>
-                </button>
-                <button
-                  onClick={() => setPaymentType("split")}
-                  className={`rounded-xl border p-4 text-left transition ${
-                    paymentType === "split"
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-white/10 bg-white/5 hover:border-white/20"
-                  }`}
-                >
-                  <p className="text-sm font-semibold text-white">Split Payment</p>
-                  <p className="mt-1 text-xs text-white/40">60% now, 40% on delivery</p>
-                </button>
-              </div>
-
-              <div className="mb-6 border-t border-white/10 pt-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-white/60">Order Total</span>
-                  <span className="text-white">Rs {total.toLocaleString()}</span>
-                </div>
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-white/60">Shipping</span>
-                  <span className="text-sm text-green-400">Free</span>
-                </div>
-                {paymentType === "split" && (
-                  <>
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="text-white/60">Pay Now (60%)</span>
-                      <span className="font-semibold text-green-400">
-                        Rs {(total * 0.6).toLocaleString()}
-                      </span>
+                <div className="rounded-[28px] border border-slate-800 bg-[#09111a] p-5">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Summary</p>
+                  <div className="mt-4 space-y-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">Order Total</span>
+                      <span className="text-slate-100">₹{total.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-white/60">Pay on Delivery (40%)</span>
-                      <span className="text-yellow-400">
-                        Rs {(total * 0.4).toLocaleString()}
-                      </span>
+                      <span className="text-slate-400">Shipping</span>
+                      <span className="text-emerald-200">Free</span>
                     </div>
-                  </>
-                )}
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-lg font-bold">Amount Due Now</span>
-                  <span className="text-2xl font-bold text-blue-400">
-                    Rs{" "}
-                    {paymentType === "split"
-                      ? (total * 0.6).toLocaleString()
-                      : total.toLocaleString()}
-                  </span>
+                    {paymentType === "split" && (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">Pay Now (60%)</span>
+                          <span className="font-semibold text-emerald-200">₹{(total * 0.6).toLocaleString()}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">Pay on Delivery (40%)</span>
+                          <span className="text-amber-200">₹{(total * 0.4).toLocaleString()}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="mt-5 flex items-center justify-between border-t border-white/8 pt-4">
+                    <span className="text-lg font-semibold">Amount Due Now</span>
+                    <span className="text-2xl font-semibold tracking-tight text-slate-100">
+                      ₹{paymentType === "split" ? (total * 0.6).toLocaleString() : total.toLocaleString()}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={handleCheckout}
+                    disabled={loading}
+                    className="mt-5 w-full rounded-xl bg-slate-100 py-4 text-base font-semibold text-slate-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {loading ? "Placing Order..." : "Place Order"}
+                  </button>
                 </div>
               </div>
-
-              <button
-                onClick={handleCheckout}
-                disabled={loading}
-                className="w-full rounded-xl bg-blue-600 py-4 text-lg font-semibold text-white shadow-lg shadow-blue-500/25 transition hover:bg-blue-500"
-              >
-                {loading ? "Placing Order..." : "Place Order"}
-              </button>
-            </div>
+            </section>
           </div>
         )}
       </div>

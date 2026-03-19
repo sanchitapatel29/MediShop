@@ -40,13 +40,16 @@ export default function Profile() {
 
   useEffect(() => {
     const token = Cookies.get('token')
-    if (!token) { router.push('/login'); return }
+    if (!token) {
+      router.push('/login')
+      return
+    }
 
     fetch('/api/profile', {
-      headers: { 'Authorization': `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` }
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setUser(data)
         setLoading(false)
       })
@@ -92,160 +95,166 @@ export default function Profile() {
     }
   }
 
-  const totalSpent = user?.orders.reduce((sum, o) => sum + o.total_price, 0) || 0
-  const totalRevenue = user?.adminOrders?.reduce((sum, o) => sum + o.total_price, 0) || 0
-  const totalStock = user?.products?.reduce((sum, p) => sum + p.stock, 0) || 0
+  const totalSpent = user?.orders.reduce((sum, order) => sum + order.total_price, 0) || 0
+  const totalRevenue = user?.adminOrders?.reduce((sum, order) => sum + order.total_price, 0) || 0
+  const totalStock = user?.products?.reduce((sum, product) => sum + product.stock, 0) || 0
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#0a1628] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <main className="app-shell flex min-h-screen items-center justify-center text-slate-100">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-transparent" />
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-[#0a1628] text-white">
-      <nav className="bg-[#0d1f3c] border-b border-white/10 px-4 md:px-8 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">M</span>
+    <main className="app-shell min-h-screen text-slate-100">
+      <nav className="border-b border-white/10 bg-[#0b1623]/90 px-4 py-4 backdrop-blur-xl md:px-8">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-100 text-sm font-bold text-slate-900">
+              M
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">Account Center</p>
+              <span className="text-xl font-semibold tracking-tight">My Profile</span>
+            </div>
           </div>
-          <span className="text-xl font-bold">MediShop</span>
+          <button
+            onClick={() => router.push(user?.role === 'admin' ? '/admin' : '/products')}
+            className="rounded-xl border border-slate-800 bg-slate-950/45 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-700 hover:text-white"
+          >
+            Back to {user?.role === 'admin' ? 'Dashboard' : 'Products'}
+          </button>
         </div>
-        <button
-          onClick={() => router.push(user?.role === 'admin' ? '/admin' : '/products')}
-          className="text-white/60 hover:text-white text-sm transition"
-        >
-          ← Back to {user?.role === 'admin' ? 'Dashboard' : 'Products'}
-        </button>
       </nav>
 
-      <div className="max-w-2xl mx-auto px-4 md:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-1">My Profile</h1>
-          <p className="text-white/40">Manage your account details</p>
-        </div>
-
-        {/* Avatar + Name */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-4 flex items-center gap-5">
-          <div className="w-16 h-16 bg-blue-500/20 border border-blue-500/30 rounded-2xl flex items-center justify-center flex-shrink-0">
-            <span className="text-2xl font-bold text-blue-400">
-              {user?.name.charAt(0).toUpperCase()}
-            </span>
+      <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
+        <section className="mb-8 rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(9,18,29,0.78))] p-6 shadow-[0_32px_90px_rgba(2,6,23,0.34)] md:p-8">
+          <p className="text-xs uppercase tracking-[0.34em] text-slate-400">Profile Summary</p>
+          <div className="mt-4 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-5">
+              <div className="flex h-20 w-20 items-center justify-center rounded-[24px] border border-slate-700 bg-slate-100 text-3xl font-semibold text-slate-900">
+                {user?.name.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <h1 className="text-3xl font-semibold tracking-tight">{user?.name}</h1>
+                <p className="mt-1 text-sm text-slate-400">{user?.email}</p>
+                <span className={`mt-3 inline-block rounded-full border px-3 py-1 text-xs font-medium ${
+                  user?.role === 'admin'
+                    ? 'border-red-500/20 bg-red-500/10 text-red-200'
+                    : 'border-slate-700 bg-slate-900/70 text-slate-300'
+                }`}>
+                  {user?.role === 'admin' ? 'Administrator' : 'Buyer Account'}
+                </span>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/40 px-4 py-3 text-sm text-slate-300">
+              Member since{' '}
+              <span className="font-semibold text-slate-100">
+                {user?.created_at && new Date(user.created_at).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                })}
+              </span>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-white">{user?.name}</h2>
-            <p className="text-white/40 text-sm">{user?.email}</p>
-            <span className={`inline-block mt-2 px-3 py-0.5 rounded-full text-xs font-medium border ${
-              user?.role === 'admin'
-                ? 'bg-red-500/20 text-red-400 border-red-500/20'
-                : 'bg-blue-500/20 text-blue-400 border-blue-500/20'
-            }`}>
-              {user?.role === 'admin' ? 'Administrator' : 'Doctor'}
-            </span>
-          </div>
-        </div>
+        </section>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
           {user?.role === 'admin' ? (
             <>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-                <p className="text-3xl font-bold text-blue-400 mb-1">{user?.products?.length || 0}</p>
-                <p className="text-white/40 text-sm">Products Listed</p>
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/45 p-5">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Products Listed</p>
+                <p className="mt-2 text-3xl font-semibold tracking-tight">{user?.products?.length || 0}</p>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-                <p className="text-3xl font-bold text-blue-400 mb-1">{totalStock}</p>
-                <p className="text-white/40 text-sm">Total Stock</p>
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/45 p-5">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Total Stock</p>
+                <p className="mt-2 text-3xl font-semibold tracking-tight">{totalStock}</p>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-                <p className="text-3xl font-bold text-green-400 mb-1">{user?.adminOrders?.length || 0}</p>
-                <p className="text-white/40 text-sm">Orders Received</p>
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/45 p-5">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Orders Received</p>
+                <p className="mt-2 text-3xl font-semibold tracking-tight">{user?.adminOrders?.length || 0}</p>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-                <p className="text-2xl font-bold text-green-400 mb-1">₹{totalRevenue.toLocaleString()}</p>
-                <p className="text-white/40 text-sm">Total Revenue</p>
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/45 p-5">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Total Revenue</p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight">₹{totalRevenue.toLocaleString()}</p>
               </div>
             </>
           ) : (
             <>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-                <p className="text-3xl font-bold text-blue-400 mb-1">{user?.orders.length}</p>
-                <p className="text-white/40 text-sm">Total Orders</p>
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/45 p-5">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Total Orders</p>
+                <p className="mt-2 text-3xl font-semibold tracking-tight">{user?.orders.length}</p>
               </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-                <p className="text-2xl font-bold text-blue-400 mb-1">₹{totalSpent.toLocaleString()}</p>
-                <p className="text-white/40 text-sm">Total Spent</p>
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/45 p-5">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Total Spend</p>
+                <p className="mt-2 text-2xl font-semibold tracking-tight">₹{totalSpent.toLocaleString()}</p>
               </div>
             </>
           )}
         </div>
 
-        {/* Details */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-4 space-y-4">
-          <h3 className="font-semibold text-white/60 text-sm uppercase tracking-wider">Account Details</h3>
-          <div className="flex justify-between items-center py-3 border-b border-white/5">
-            <span className="text-white/40 text-sm">Full Name</span>
-            <span className="text-white font-medium">{user?.name}</span>
-          </div>
-          <div className="flex justify-between items-center py-3 border-b border-white/5">
-            <span className="text-white/40 text-sm">Email</span>
-            <span className="text-white font-medium">{user?.email}</span>
-          </div>
-          <div className="flex justify-between items-center py-3 border-b border-white/5">
-            <span className="text-white/40 text-sm">{user?.role === 'admin' ? 'Company/Store' : 'Hospital'}</span>
-            <span className="text-white font-medium">{user?.hospital_name || '—'}</span>
-          </div>
-          <div className="flex justify-between items-center py-3">
-            <span className="text-white/40 text-sm">Member Since</span>
-            <span className="text-white font-medium">
-              {user?.created_at && new Date(user.created_at).toLocaleDateString('en-IN', {
-                day: 'numeric', month: 'long', year: 'numeric'
-              })}
-            </span>
-          </div>
-        </div>
+        <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+          <section className="rounded-[32px] border border-slate-800 bg-slate-950/45 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.2)]">
+            <h2 className="text-lg font-semibold">Account Details</h2>
+            <div className="mt-5 space-y-4">
+              {[
+                ['Full Name', user?.name],
+                ['Email', user?.email],
+                [user?.role === 'admin' ? 'Company / Store' : 'Hospital / Clinic', user?.hospital_name || 'Not provided'],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-2xl border border-slate-800 bg-[#09111a] px-4 py-4">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{label}</p>
+                  <p className="mt-2 text-sm font-medium text-slate-100">{value}</p>
+                </div>
+              ))}
+            </div>
+          </section>
 
-        {/* Actions */}
-        <div className="space-y-3">
-          {user?.role === 'admin' ? (
-            <button
-              onClick={() => router.push('/admin')}
-              className="w-full bg-white/5 border border-white/10 hover:border-blue-500/40 text-white py-4 rounded-xl font-medium transition flex justify-between items-center px-6"
-            >
-              <span>Admin Dashboard</span>
-              <span className="text-white/40">→</span>
-            </button>
-          ) : (
-            <button
-              onClick={() => router.push('/orders')}
-              className="w-full bg-white/5 border border-white/10 hover:border-blue-500/40 text-white py-4 rounded-xl font-medium transition flex justify-between items-center px-6"
-            >
-              <span>View My Orders</span>
-              <span className="text-white/40">→</span>
-            </button>
-          )}
-          <button
-            onClick={() => router.push('/products')}
-            className="w-full bg-white/5 border border-white/10 hover:border-blue-500/40 text-white py-4 rounded-xl font-medium transition flex justify-between items-center px-6"
-          >
-            <span>{user?.role === 'admin' ? 'View Store' : 'Browse Products'}</span>
-            <span className="text-white/40">→</span>
-          </button>
-          <button
-            onClick={handleLogout}
-            className="w-full bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 py-4 rounded-xl font-medium transition"
-          >
-            Log Out
-          </button>
-          <button
-            onClick={handleDeleteProfile}
-            disabled={deleting}
-            className="w-full bg-red-600/15 border border-red-600/30 hover:bg-red-600/25 text-red-300 py-4 rounded-xl font-medium transition disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {deleting ? 'Deleting Profile...' : 'Delete Profile'}
-          </button>
+          <section className="rounded-[32px] border border-slate-800 bg-slate-950/45 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.2)]">
+            <h2 className="text-lg font-semibold">Actions</h2>
+            <div className="mt-5 space-y-3">
+              {user?.role === 'admin' ? (
+                <button
+                  onClick={() => router.push('/admin')}
+                  className="flex w-full items-center justify-between rounded-2xl border border-slate-800 bg-[#09111a] px-5 py-4 text-left transition hover:border-slate-700"
+                >
+                  <span className="font-medium text-slate-100">Open Admin Dashboard</span>
+                  <span className="text-slate-500">Go</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => router.push('/orders')}
+                  className="flex w-full items-center justify-between rounded-2xl border border-slate-800 bg-[#09111a] px-5 py-4 text-left transition hover:border-slate-700"
+                >
+                  <span className="font-medium text-slate-100">View My Orders</span>
+                  <span className="text-slate-500">Go</span>
+                </button>
+              )}
+              <button
+                onClick={() => router.push('/products')}
+                className="flex w-full items-center justify-between rounded-2xl border border-slate-800 bg-[#09111a] px-5 py-4 text-left transition hover:border-slate-700"
+              >
+                <span className="font-medium text-slate-100">{user?.role === 'admin' ? 'View Storefront' : 'Browse Products'}</span>
+                <span className="text-slate-500">Go</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full rounded-2xl border border-slate-700 bg-slate-100 px-5 py-4 font-semibold text-slate-950 transition hover:bg-white"
+              >
+                Log Out
+              </button>
+              <button
+                onClick={handleDeleteProfile}
+                disabled={deleting}
+                className="w-full rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 font-medium text-red-200 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleting ? 'Deleting Profile...' : 'Delete Profile'}
+              </button>
+            </div>
+          </section>
         </div>
       </div>
     </main>

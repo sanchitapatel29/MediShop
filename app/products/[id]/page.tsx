@@ -81,11 +81,19 @@ export default function ProductDetailPage() {
 
   const addToCart = () => {
     if (!product) return;
+    if (product.stock <= 0) {
+      setMessage(`${product.name} is out of stock`);
+      return;
+    }
 
     const cart = JSON.parse(localStorage.getItem("cart") || "[]") as CartItem[];
     const existing = cart.find((item) => item.id === product.id);
 
     if (existing) {
+      if (existing.quantity >= product.stock) {
+        setMessage(`Only ${product.stock} unit(s) left`);
+        return;
+      }
       existing.quantity += 1;
     } else {
       cart.push({
@@ -154,21 +162,21 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#0a1628] text-white">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+      <main className="app-shell flex min-h-screen items-center justify-center text-slate-100">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-transparent" />
       </main>
     );
   }
 
   if (!product) {
     return (
-      <main className="min-h-screen bg-[#0a1628] px-4 py-12 text-white">
-        <div className="mx-auto max-w-3xl rounded-2xl border border-white/10 bg-white/5 p-10 text-center">
-          <p className="text-xl font-semibold">Instrument unavailable</p>
-          <p className="mt-3 text-white/40">{message || "This item could not be loaded."}</p>
+      <main className="app-shell min-h-screen px-4 py-12 text-slate-100">
+        <div className="mx-auto max-w-3xl rounded-[32px] border border-slate-800 bg-slate-950/50 p-10 text-center shadow-[0_30px_80px_rgba(2,6,23,0.28)]">
+          <p className="text-2xl font-semibold tracking-tight">Instrument unavailable</p>
+          <p className="mt-3 text-slate-400">{message || "This item could not be loaded."}</p>
           <button
             onClick={() => router.push("/products")}
-            className="mt-6 rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-500"
+            className="mt-6 rounded-xl bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-white"
           >
             Back to Products
           </button>
@@ -180,18 +188,18 @@ export default function ProductDetailPage() {
   const gallery = product.imageUrls.length ? product.imageUrls : [];
 
   return (
-    <main className="min-h-screen bg-[#0a1628] text-white">
-      <nav className="border-b border-white/10 bg-[#0d1f3c] px-4 py-4 md:px-8">
+    <main className="app-shell min-h-screen text-slate-100">
+      <nav className="border-b border-white/10 bg-[#0b1623]/90 px-4 py-4 backdrop-blur-xl md:px-8">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
             onClick={() => router.push("/products")}
-            className="text-sm text-white/60 transition hover:text-white"
+            className="rounded-xl border border-slate-800 bg-slate-950/40 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-700 hover:text-white"
           >
             Back to Products
           </button>
           <button
             onClick={() => router.push("/cart")}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
+            className="rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-white"
           >
             Go to Cart
           </button>
@@ -200,22 +208,22 @@ export default function ProductDetailPage() {
 
       <div className="mx-auto max-w-6xl px-4 py-8 md:px-8">
         {message && (
-          <div className="mb-6 rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-3 text-sm text-blue-300">
+          <div className="mb-6 rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-slate-200">
             {message}
           </div>
         )}
 
         <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-          <section>
-            <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+          <section className="rounded-[32px] border border-slate-800 bg-slate-950/42 p-5 shadow-[0_24px_60px_rgba(2,6,23,0.22)] sm:p-6">
+            <div className="overflow-hidden rounded-[28px] border border-slate-800 bg-[#09111a]">
               {gallery[selectedImage] ? (
                 <img
                   src={gallery[selectedImage]}
                   alt={product.name}
-                  className="h-64 w-full object-cover sm:h-80 lg:h-[420px]"
+                  className="h-72 w-full object-cover sm:h-96 lg:h-[460px]"
                 />
               ) : (
-                <div className="flex h-64 items-center justify-center text-4xl text-white/30 sm:h-80 lg:h-[420px] lg:text-5xl">
+                <div className="flex h-72 items-center justify-center text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500 sm:h-96 lg:h-[460px]">
                   No image
                 </div>
               )}
@@ -227,12 +235,12 @@ export default function ProductDetailPage() {
                   <button
                     key={imageUrl + index}
                     onClick={() => setSelectedImage(index)}
-                    className={`overflow-hidden rounded-2xl border ${selectedImage === index ? "border-blue-500" : "border-white/10"} bg-white/5`}
+                    className={`overflow-hidden rounded-2xl border bg-[#09111a] ${selectedImage === index ? "border-slate-600" : "border-slate-800"}`}
                   >
                     <img
                       src={imageUrl}
                       alt={`${product.name} ${index + 1}`}
-                      className="h-20 w-full object-cover sm:h-24"
+                      className="h-24 w-full object-cover"
                     />
                   </button>
                 ))}
@@ -240,35 +248,41 @@ export default function ProductDetailPage() {
             )}
           </section>
 
-          <section className="space-y-6">
-            <div>
-              <span className="rounded-full border border-blue-500/20 bg-blue-500/20 px-3 py-1 text-xs text-blue-400">
+          <section className="space-y-5">
+            <div className="rounded-[32px] border border-slate-800 bg-slate-950/42 p-6 shadow-[0_24px_60px_rgba(2,6,23,0.22)]">
+              <span className="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-slate-300">
                 {product.category}
               </span>
-              <h1 className="mt-4 text-2xl font-bold sm:text-3xl">{product.name}</h1>
-              <p className="mt-3 text-white/60">{product.description}</p>
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight">{product.name}</h1>
+              <p className="mt-3 text-sm leading-relaxed text-slate-400">{product.description}</p>
+
+              <div className="mt-6 rounded-2xl border border-slate-800 bg-[#09111a] p-5">
+                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Price</p>
+                <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-100">₹{product.price}</p>
+                {product.stock <= 0 ? (
+                  <p className="mt-3 text-sm font-medium text-red-300">Out of stock</p>
+                ) : product.stock < 3 ? (
+                  <p className="mt-3 text-sm font-medium text-amber-200">Only {product.stock} left</p>
+                ) : null}
+              </div>
+
+              <button
+                onClick={addToCart}
+                disabled={product.stock <= 0}
+                className="mt-6 w-full rounded-xl bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-white disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+              >
+                {product.stock <= 0 ? "Out of Stock" : "Add to Cart"}
+              </button>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-              <p className="text-sm text-white/40">Price</p>
-              <p className="mt-2 text-2xl font-bold text-blue-400 sm:text-3xl">Rs {product.price}</p>
-              {product.stock < 4 && (
-                <p className="mt-3 text-sm font-medium text-orange-400">
-                  Only {product.stock} left
-                </p>
-              )}
-            </div>
-
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+            <div className="rounded-[32px] border border-slate-800 bg-slate-950/42 p-6 shadow-[0_24px_60px_rgba(2,6,23,0.22)]">
               <h2 className="text-lg font-semibold">Instrument Details</h2>
-              <p className="mt-3 whitespace-pre-line text-white/60">
+              <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-slate-400">
                 {product.detailedDescription || product.description}
               </p>
-              <div className="mt-5 space-y-2 text-sm text-white/40">
+              <div className="mt-5 space-y-2 text-sm text-slate-500">
                 {product.certification && <p>Certification: {product.certification}</p>}
-                {product.admin && (
-                  <p>Supplier: {product.admin.hospital_name || product.admin.name}</p>
-                )}
+                {product.admin && <p>Supplier: {product.admin.hospital_name || product.admin.name}</p>}
                 <p>
                   Added on{" "}
                   {new Date(product.created_at).toLocaleDateString("en-IN", {
@@ -280,41 +294,32 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+            <div className="rounded-[32px] border border-slate-800 bg-slate-950/42 p-6 shadow-[0_24px_60px_rgba(2,6,23,0.22)]">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-lg font-semibold">Customer Rating</h2>
-                <span className="text-sm text-white/40">{product.reviews.length} review(s)</span>
+                <span className="text-sm text-slate-500">{product.reviews.length} review(s)</span>
               </div>
-              <p className="mt-3 text-3xl font-bold text-blue-400">
+              <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-100">
                 {product.reviews.length ? averageRating.toFixed(1) : "New"}
               </p>
             </div>
-
-            <button
-              onClick={addToCart}
-              className="w-full rounded-xl bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-500"
-            >
-              Add to Cart
-            </button>
           </section>
         </div>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-          <section className="rounded-3xl border border-white/10 bg-white/5 p-5">
+        <div className="mt-10 grid gap-6 lg:grid-cols-[0.88fr_1.12fr]">
+          <section className="rounded-[32px] border border-slate-800 bg-slate-950/42 p-5 shadow-[0_24px_60px_rgba(2,6,23,0.2)] sm:p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Write a Review</h2>
-                <p className="mt-1 text-xs text-white/40">
-                  Visible to all customers
-                </p>
+                <p className="mt-1 text-xs text-slate-500">Visible to all customers</p>
               </div>
               <select
                 value={rating}
                 onChange={(event) => setRating(Number(event.target.value))}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+                className="rounded-lg border border-slate-800 bg-[#09111a] px-3 py-2 text-sm text-slate-100 focus:border-slate-600 focus:outline-none"
               >
                 {[5, 4, 3, 2, 1].map((value) => (
-                  <option key={value} value={value} className="bg-[#0a1628]">
+                  <option key={value} value={value} className="bg-[#09111a]">
                     {value} / 5
                   </option>
                 ))}
@@ -323,47 +328,45 @@ export default function ProductDetailPage() {
 
             <div className="mt-4 space-y-3">
               <textarea
-                rows={3}
+                rows={4}
                 value={reviewText}
                 onChange={(event) => setReviewText(event.target.value)}
                 placeholder="Share your experience with this instrument"
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-white/20 focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:border-slate-600 focus:outline-none"
               />
               <button
                 onClick={submitReview}
                 disabled={submitting}
-                className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting ? "Submitting..." : "Submit Review"}
               </button>
             </div>
           </section>
 
-          <section className="rounded-3xl border border-white/10 bg-white/5 p-5 sm:p-6">
+          <section className="rounded-[32px] border border-slate-800 bg-slate-950/42 p-5 shadow-[0_24px_60px_rgba(2,6,23,0.2)] sm:p-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-xl font-semibold">Customer Reviews</h2>
-              <span className="text-sm text-white/40">{product.reviews.length} total</span>
+              <span className="text-sm text-slate-500">{product.reviews.length} total</span>
             </div>
 
             <div className="mt-6 space-y-4">
               {product.reviews.length === 0 ? (
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-5 text-sm text-white/40">
+                <div className="rounded-2xl border border-slate-800 bg-[#09111a] p-5 text-sm text-slate-500">
                   No reviews yet.
                 </div>
               ) : (
                 product.reviews.map((review) => (
                   <article
                     key={review.id}
-                    className="rounded-2xl border border-white/10 bg-white/5 p-5"
+                    className="rounded-2xl border border-slate-800 bg-[#09111a] p-5"
                   >
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <p className="font-semibold">{review.userName}</p>
-                        <p className="text-xs text-white/40">
-                          {review.hospitalName || "Customer"}
-                        </p>
+                        <p className="font-semibold text-slate-100">{review.userName}</p>
+                        <p className="text-xs text-slate-500">{review.hospitalName || "Customer"}</p>
                       </div>
-                      <div className="text-sm text-white/40">
+                      <div className="text-sm text-slate-500">
                         <p>{review.rating} / 5</p>
                         <p>
                           {new Date(review.createdAt).toLocaleDateString("en-IN", {
@@ -374,7 +377,7 @@ export default function ProductDetailPage() {
                         </p>
                       </div>
                     </div>
-                    <p className="mt-4 whitespace-pre-line text-white/70">{review.comment}</p>
+                    <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-slate-300">{review.comment}</p>
                   </article>
                 ))
               )}

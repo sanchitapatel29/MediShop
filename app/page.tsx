@@ -1,99 +1,190 @@
 "use client";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [listedProducts, setListedProducts] = useState(0);
+
+  const faqs = [
+    {
+      question: "How are suppliers approved?",
+      answer:
+        "Supplier access is handled separately from buyer signup, so seller accounts remain controlled and marketplace operations stay structured.",
+    },
+    {
+      question: "Can we place bulk orders?",
+      answer:
+        "Yes. The platform is designed for hospitals, clinics, and procurement teams placing multi-item institutional orders.",
+    },
+    {
+      question: "What payment options are available?",
+      answer:
+        "Orders support both full payment and split payment, depending on how your team prefers to process procurement.",
+    },
+    {
+      question: "What if a product is not listed?",
+      answer:
+        "You can submit a sourcing request and suppliers can review the requirement from the admin side.",
+    },
+  ];
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then((response) => response.json())
+      .then((data) => {
+        if (!Array.isArray(data)) return;
+        setListedProducts(data.filter((product) => product.stock > 0).length);
+      })
+      .catch(() => undefined);
+  }, []);
 
   return (
-    <main className="min-h-screen bg-[#0a1628] text-white overflow-hidden relative">
-      {/* Background grid */}
-      <div
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage:
-            "linear-gradient(#1e40af 1px, transparent 1px), linear-gradient(90deg, #1e40af 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
-
-      {/* Glow effect */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-blue-500 opacity-10 blur-[120px] rounded-full" />
-
-      {/* Navbar */}
-      <nav className="relative z-10 flex flex-col gap-4 px-4 py-5 border-b border-white/10 sm:flex-row sm:items-center sm:justify-between md:px-12 md:py-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">M</span>
+    <main className="app-shell min-h-screen text-slate-100">
+      <nav className="border-b border-white/10 bg-[#0b1623]/90 px-4 py-4 backdrop-blur-xl md:px-8">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-100 text-sm font-bold text-slate-900">
+              M
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">Medical Procurement</p>
+              <span className="text-xl font-semibold tracking-tight">MediShop</span>
+            </div>
           </div>
-          <span className="text-xl font-bold tracking-tight">MediShop</span>
-          <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/30">
-            B2B
-          </span>
-        </div>
-        <div className="flex w-full gap-3 sm:w-auto sm:gap-4">
-          <button
-            onClick={() => router.push("/login")}
-            className="flex-1 px-4 py-2 text-sm text-white/70 hover:text-white transition sm:flex-none"
-          >
-            Login
-          </button>
-          <button
-            onClick={() => router.push("/signup")}
-            className="flex-1 px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition font-medium sm:flex-none"
-          >
-            Get Started
-          </button>
+          <div className="flex w-full gap-3 sm:w-auto">
+            <button
+              onClick={() => router.push("/login")}
+              className="flex-1 rounded-xl border border-slate-800 bg-slate-950/45 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-700 hover:text-white sm:flex-none"
+            >
+              Customer Login
+            </button>
+            <button
+              onClick={() => router.push("/admin/login")}
+              className="flex-1 rounded-xl border border-slate-800 bg-slate-950/45 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-700 hover:text-white sm:flex-none"
+            >
+              Admin Portal
+            </button>
+            <button
+              onClick={() => router.push("/signup")}
+              className="flex-1 rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-white sm:flex-none"
+            >
+              Get Started
+            </button>
+          </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-12 pt-16 md:pt-24 pb-12 md:pb-20 text-center">
-        <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 tracking-tight">
-          Medical Equipment
-          <br />
-          <span className="text-blue-400">Procurement Made Simple</span>
-        </h1>
-        <p className="text-base md:text-lg text-white/50 max-w-2xl mx-auto mb-8 md:mb-12 leading-relaxed">
-          Browse certified surgical instruments, diagnostic equipment, and
-          orthopedic implants. Order in bulk directly from verified
-          manufacturers.
-        </p>
-        <div className="flex flex-col md:flex-row gap-3 justify-center">
-          <button
-            onClick={() => router.push("/signup")}
-            className="px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-semibold text-lg transition shadow-lg shadow-blue-500/25"
-          >
-            Start Ordering →
-          </button>
-          <button
-            onClick={() => router.push("/login")}
-            className="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-semibold text-lg transition"
-          >
-            Login to Account
-          </button>
-        </div>
-      </div>
+      <section className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-16">
+        <div className="rounded-[36px] border border-white/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.94),rgba(9,18,29,0.8))] p-8 shadow-[0_40px_100px_rgba(2,6,23,0.38)] md:p-12">
+          <p className="text-xs uppercase tracking-[0.34em] text-slate-400">Healthcare Procurement Platform</p>
+          <div className="mt-5 max-w-4xl">
+            <h1 className="text-4xl font-semibold tracking-tight md:text-6xl">
+              Medical equipment procurement for hospitals and clinics.
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-400 md:text-lg">
+              Browse certified products, place structured orders, and manage sourcing through a cleaner B2B workflow.
+            </p>
+          </div>
 
-      {/* Stats */}
-      <div className="relative z-10 max-w-4xl mx-auto px-6 md:px-12 pb-16 md:pb-24">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <button
+              onClick={() => router.push("/signup")}
+              className="rounded-xl bg-slate-100 px-7 py-4 text-base font-semibold text-slate-950 transition hover:bg-white"
+            >
+              Create Buyer Account
+            </button>
+            <button
+              onClick={() => router.push("/products")}
+              className="rounded-xl border border-slate-700 bg-slate-950/35 px-7 py-4 text-base font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-900/50"
+            >
+              Browse Catalog
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-8 md:px-8 md:pb-10">
+        <div className="grid gap-4 md:grid-cols-3">
           {[
-            { number: "2,500+", label: "Products Available" },
+            { number: String(listedProducts), label: "Products In Stock" },
             { number: "500+", label: "Hospitals Served" },
             { number: "99.8%", label: "Order Accuracy" },
           ].map((stat) => (
-            <div
-              key={stat.label}
-              className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center"
-            >
-              <p className="text-4xl font-bold text-blue-400 mb-2">
-                {stat.number}
-              </p>
-              <p className="text-white/50 text-sm">{stat.label}</p>
+            <div key={stat.label} className="rounded-[28px] border border-slate-800 bg-slate-950/45 p-6 shadow-[0_18px_44px_rgba(2,6,23,0.18)]">
+              <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{stat.label}</p>
+              <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-100">{stat.number}</p>
             </div>
           ))}
         </div>
-      </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-12 md:px-8 md:pb-16">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-[28px] border border-slate-800 bg-slate-950/45 p-6">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">For Buyers</p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight">Place orders and manage sourcing requests.</h2>
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
+              Buyer access is built for procurement teams that need a clearer order flow without retail-style clutter.
+            </p>
+          </div>
+          <div className="rounded-[28px] border border-slate-800 bg-slate-950/45 p-6">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">For Suppliers</p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight">Manage inventory and fulfill incoming demand.</h2>
+            <p className="mt-3 text-sm leading-relaxed text-slate-400">
+              Admin access gives suppliers a dedicated workspace for product management, requests, and order operations.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-12 md:px-8 md:pb-16">
+        <div className="rounded-[32px] border border-slate-800 bg-slate-950/45 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.2)] md:p-8">
+          <div className="mb-8 max-w-2xl">
+            <p className="text-xs uppercase tracking-[0.34em] text-slate-400">Frequently Asked Questions</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
+              Quick answers before you place an order.
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-slate-400 md:text-base">
+              Review the basics around supplier access, procurement flow, sourcing, and payments.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {faqs.map((faq, index) => {
+              const isOpen = openFaq === index;
+
+              return (
+                <div
+                  key={faq.question}
+                  className={`rounded-2xl border transition ${
+                    isOpen
+                      ? "border-slate-700 bg-[#09111a]"
+                      : "border-slate-800 bg-slate-950/35"
+                  }`}
+                >
+                  <button
+                    onClick={() => setOpenFaq(isOpen ? null : index)}
+                    className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left md:px-6"
+                  >
+                    <span className="text-base font-semibold text-slate-100 md:text-lg">
+                      {faq.question}
+                    </span>
+                    <span className="text-xl text-slate-500">{isOpen ? "−" : "+"}</span>
+                  </button>
+
+                  {isOpen && (
+                    <div className="px-5 pb-5 text-sm leading-relaxed text-slate-400 md:px-6 md:pb-6 md:text-base">
+                      {faq.answer}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
