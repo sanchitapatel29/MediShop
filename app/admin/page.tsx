@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Cookies from 'js-cookie'
+import { BrandLogo } from '../brand-logo'
 
 interface Product {
   id: number
@@ -108,49 +108,33 @@ export default function Admin() {
   })
   const [message, setMessage] = useState('')
 
-  const token = Cookies.get('token')
-  const role = Cookies.get('role')
-
   useEffect(() => {
-    if (!token) {
-      router.push('/admin/login')
-      return
-    }
-
-    if (role !== 'admin') {
-      router.push('/login')
-      return
-    }
-
-    const authHeaders = { Authorization: `Bearer ${token}` }
-
-    fetch('/api/products?myProducts=true', { headers: authHeaders })
+    fetch('/api/products?myProducts=true', { cache: 'no-store' })
       .then((response) => response.json())
       .then((data) => setProducts(Array.isArray(data) ? data : []))
       .catch(() => setProducts([]))
 
-    fetch('/api/orders/admin', { headers: authHeaders })
+    fetch('/api/orders/admin', { cache: 'no-store' })
       .then((response) => (response.ok ? response.json() : []))
       .then((data) => setOrders(Array.isArray(data) ? data : []))
       .catch(() => setOrders([]))
 
-    fetch('/api/requests', { headers: authHeaders })
+    fetch('/api/requests', { cache: 'no-store' })
       .then((response) => (response.ok ? response.json() : []))
       .then((data) => setRequests(Array.isArray(data) ? data : []))
       .catch(() => setRequests([]))
 
-    fetch('/api/notifications', { headers: authHeaders })
+    fetch('/api/notifications', { cache: 'no-store' })
       .then((response) => (response.ok ? response.json() : []))
       .then((data) => setNotifications(Array.isArray(data) ? data : []))
       .catch(() => setNotifications([]))
-  }, [role, router, token])
+  }, [router])
 
   const unreadCount = notifications.filter((notification) => !notification.is_read).length
 
   const markAllRead = async () => {
     await fetch('/api/notifications', {
-      method: 'PATCH',
-      headers: { Authorization: `Bearer ${token}` }
+      method: 'PATCH'
     })
     setNotifications(notifications.map((notification) => ({ ...notification, is_read: true })))
   }
@@ -158,7 +142,7 @@ export default function Admin() {
   const handleAddProduct = async () => {
     const res = await fetch('/api/products', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...formData,
         imageUrls: formData.imageUrlsText
@@ -181,12 +165,10 @@ export default function Admin() {
         certification: ''
       })
 
-      if (token) {
-        fetch('/api/products?myProducts=true', { headers: { Authorization: `Bearer ${token}` } })
-          .then((response) => response.json())
-          .then((data) => setProducts(Array.isArray(data) ? data : []))
-          .catch(() => setProducts([]))
-      }
+      fetch('/api/products?myProducts=true')
+        .then((response) => response.json())
+        .then((data) => setProducts(Array.isArray(data) ? data : []))
+        .catch(() => setProducts([]))
 
       setTimeout(() => setMessage(''), 3000)
     }
@@ -200,7 +182,7 @@ export default function Admin() {
   const updateOrderStatus = async (orderId: number, status: string) => {
     await fetch('/api/orders/admin', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId, status })
     })
     setOrders(orders.map((order) => (order.id === orderId ? { ...order, status } : order)))
@@ -210,7 +192,7 @@ export default function Admin() {
     if (!confirm('Delete this order permanently?')) return
     await fetch('/api/orders/admin', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId })
     })
     setOrders(orders.filter((order) => order.id !== orderId))
@@ -220,13 +202,8 @@ export default function Admin() {
     <main className="app-shell min-h-screen text-slate-100" suppressHydrationWarning>
       <nav className="sticky top-0 z-50 flex flex-col gap-3 border-b border-white/10 bg-[#0b1623]/90 px-4 py-4 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between md:px-8">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-100 text-sm font-bold text-slate-900">
-            M
-          </div>
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.28em] text-slate-400">Control Panel</p>
-            <p className="text-xl font-semibold tracking-tight text-slate-100">MediShop Admin</p>
-          </div>
+          <BrandLogo size='sm' />
+          <p className="font-display text-xl font-semibold tracking-[-0.04em] text-slate-100">MedEquip Supplier Desk</p>
         </div>
 
         <div className="flex items-center gap-3 self-end sm:self-auto">
@@ -310,7 +287,7 @@ export default function Admin() {
           <p className="mb-3 text-xs uppercase tracking-[0.34em] text-slate-400">Operations Overview</p>
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Supplier Operations</h1>
+              <h1 className="font-display text-3xl font-semibold tracking-[-0.04em] md:text-4xl">Supplier Operations</h1>
               <p className="mt-2 max-w-2xl text-sm text-slate-400 md:text-base">
                 Manage inventory, monitor orders, and respond to procurement requests from a single workspace.
               </p>

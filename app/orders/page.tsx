@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
 
 interface OrderItem {
   id: number;
@@ -39,15 +38,16 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = Cookies.get("token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
     fetch("/api/orders", {
-      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          router.push("/login");
+          return [];
+        }
+        return res.json();
+      })
       .then((data) => {
         setOrders(Array.isArray(data) ? data : []);
         setLoading(false);

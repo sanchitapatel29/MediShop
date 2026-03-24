@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --font-sans: var(--font-manrope), "Segoe UI", sans-serif;
+  --font-sans: var(--font-jakarta-sans), "Segoe UI", sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-jakarta-sans), "Segoe UI", sans-serif;
   --font-mono: var(--font-ibm-plex-mono), monospace;
   --page-bg: #08111b;
   --text-main: #e5edf5;
@@ -40,6 +41,10 @@ body {
     linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
   background-size: 72px 72px;
   mask-image: linear-gradient(180deg, rgba(255, 255, 255, 0.45), transparent 85%);
+}
+
+.font-display {
+  font-family: var(--font-display);
 }
 
 input,

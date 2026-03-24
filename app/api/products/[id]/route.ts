@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
 import { prisma } from '@/lib/prisma'
+import { getSessionUser } from '@/lib/auth-session'
 import {
   addProductReview,
   deleteProductContent,
@@ -58,13 +58,12 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) {
+    const sessionUser = await getSessionUser()
+    if (!sessionUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number, role: string }
-    if (decoded.role === 'admin') {
+    if (sessionUser.role === 'admin') {
       return NextResponse.json({ error: 'Only customers can post reviews' }, { status: 403 })
     }
 
@@ -78,10 +77,10 @@ export async function POST(
       return NextResponse.json({ error: 'Valid rating and comment are required' }, { status: 400 })
     }
 
-    const [product, user] = await Promise.all([
+    const [product, reviewAuthor] = await Promise.all([
       prisma.product.findUnique({ where: { id: productId }, select: { id: true } }),
       prisma.user.findUnique({
-        where: { id: decoded.userId },
+        where: { id: sessionUser.id },
         select: { id: true, name: true, hospital_name: true }
       })
     ])
@@ -90,16 +89,16 @@ export async function POST(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    if (!user) {
+    if (!reviewAuthor) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
     const review = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       productId,
-      userId: user.id,
-      userName: user.name,
-      hospitalName: user.hospital_name,
+      userId: reviewAuthor.id,
+      userName: reviewAuthor.name,
+      hospitalName: reviewAuthor.hospital_name,
       rating,
       comment,
       createdAt: new Date().toISOString()
@@ -121,8 +120,26 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getSessionUser()
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
     const { id } = await params
     const productId = parseInt(id)
+
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { added_by: true }
+    })
+
+    if (!product) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    }
+
+    if (product.added_by !== user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
 
     await prisma.product.delete({
       where: { id: productId }

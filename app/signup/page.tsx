@@ -1,6 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { getProviders, signIn } from 'next-auth/react'
+import { BrandLogo } from '../brand-logo'
+
+type ProviderMap = Awaited<ReturnType<typeof getProviders>>
 
 export default function Signup() {
   const router = useRouter()
@@ -12,6 +16,11 @@ export default function Signup() {
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [providers, setProviders] = useState<ProviderMap>(null)
+
+  useEffect(() => {
+    getProviders().then((availableProviders) => setProviders(availableProviders))
+  }, [])
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -27,6 +36,19 @@ export default function Signup() {
     setLoading(false)
 
     if (res.ok) {
+      const result = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        portal: 'doctor',
+        redirect: false
+      })
+
+      if (!result?.error) {
+        router.push('/products')
+        router.refresh()
+        return
+      }
+
       router.push('/login')
     } else {
       setError(data.error)
@@ -35,41 +57,23 @@ export default function Signup() {
 
   return (
     <main className="app-shell min-h-screen px-4 py-8 text-slate-100">
-      <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-6xl items-center gap-8 lg:grid-cols-[1.02fr_0.98fr]">
-        <section className="rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(14,23,39,0.94),rgba(9,18,29,0.8))] p-8 shadow-[0_40px_100px_rgba(2,6,23,0.38)] md:p-10">
-          <p className="text-xs uppercase tracking-[0.34em] text-slate-400">Buyer Onboarding</p>
-          <h1 className="mt-4 max-w-xl text-4xl font-semibold tracking-tight md:text-5xl">
-            Open a procurement account for your hospital or clinic.
-          </h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-slate-400">
-            Create a buyer account to place institutional orders, request unavailable equipment, and manage procurement activity in one place.
-          </p>
-
-          <div className="mt-10 space-y-4">
-            {[
-              'Browse products listed by approved suppliers',
-              'Place orders with full or split payment',
-              'Track requests and procurement history',
-            ].map((item) => (
-              <div key={item} className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-950/35 px-4 py-4">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-[11px] font-semibold tracking-[0.18em] text-slate-300">
-                  OK
-                </span>
-                <p className="text-sm text-slate-200">{item}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="rounded-[32px] border border-slate-800 bg-slate-950/55 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.26)] sm:p-8">
+      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-2xl items-center">
+        <section className="w-full rounded-[32px] border border-slate-800 bg-slate-950/55 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.26)] sm:p-8">
           <div className="mb-8 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-100 text-sm font-bold text-slate-900">
-              M
-            </div>
+            <BrandLogo />
             <div>
-              <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">MediShop</p>
-              <p className="text-xl font-semibold text-slate-100">Create Buyer Account</p>
+              <p className="font-display text-xl font-semibold tracking-[-0.04em] text-slate-100">MedEquip</p>
+              <p className="text-sm text-slate-400">Create buyer account</p>
             </div>
+          </div>
+
+          <div className="mb-8">
+            <h1 className="font-display text-3xl font-semibold tracking-[-0.04em] text-slate-100 md:text-4xl">
+              Set up your procurement account.
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed text-slate-400 md:text-base">
+              Use your hospital or clinic details to create a buyer account and start placing orders.
+            </p>
           </div>
 
           {error && (
@@ -79,6 +83,14 @@ export default function Signup() {
           )}
 
           <div className="space-y-4">
+            {providers?.google && (
+              <button
+                onClick={() => signIn('google', { callbackUrl: '/products' })}
+                className="w-full rounded-xl border border-slate-700 bg-transparent py-3 font-semibold text-slate-100 transition hover:border-slate-500 hover:bg-slate-900/60"
+              >
+                Continue with Google
+              </button>
+            )}
             <div>
               <label className="mb-2 block text-sm text-slate-400">Full Name</label>
               <input

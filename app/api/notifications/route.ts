@@ -1,40 +1,36 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import jwt from 'jsonwebtoken'
+import { getSessionUser } from '@/lib/auth-session'
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number }
+    const user = await getSessionUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const notifications = await prisma.notification.findMany({
-      where: { user_id: decoded.userId },
+      where: { user_id: user.id },
       orderBy: { created_at: 'desc' },
       take: 20
     })
 
     return NextResponse.json(notifications)
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
   }
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH() {
   try {
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number }
+    const user = await getSessionUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     await prisma.notification.updateMany({
-      where: { user_id: decoded.userId, is_read: false },
+      where: { user_id: user.id, is_read: false },
       data: { is_read: true }
     })
 
     return NextResponse.json({ message: 'Marked as read' })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // Run this to check and update admin status
 // Usage: node check-admin.js youremail@example.com
 

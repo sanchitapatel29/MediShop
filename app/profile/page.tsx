@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Cookies from 'js-cookie'
+import { signOut } from 'next-auth/react'
 
 interface UserProfile {
   id: number
@@ -39,15 +39,7 @@ export default function Profile() {
   const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
-    const token = Cookies.get('token')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-
-    fetch('/api/profile', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    fetch('/api/profile', { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         setUser(data)
@@ -55,15 +47,14 @@ export default function Profile() {
       })
   }, [router])
 
-  const handleLogout = () => {
-    Cookies.remove('token')
-    Cookies.remove('role')
+  const handleLogout = async () => {
+    await signOut({ redirect: false })
     router.push('/')
+    router.refresh()
   }
 
   const handleDeleteProfile = async () => {
-    const token = Cookies.get('token')
-    if (!token || deleting) return
+    if (deleting) return
 
     const confirmed = window.confirm(
       'Delete your profile permanently? Your account details, personal orders, requests, and notifications will be removed.'
@@ -75,8 +66,7 @@ export default function Profile() {
 
     try {
       const response = await fetch('/api/profile', {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+        method: 'DELETE'
       })
 
       const data = await response.json()
@@ -85,8 +75,7 @@ export default function Profile() {
         throw new Error(data.error || 'Failed to delete profile')
       }
 
-      Cookies.remove('token')
-      Cookies.remove('role')
+      await signOut({ redirect: false })
       router.push('/')
       router.refresh()
     } catch (error) {

@@ -1,19 +1,17 @@
 import { NextResponse } from 'next/server'
 import { getMultipleOrderDetails } from '@/lib/order-details-store'
 import { prisma } from '@/lib/prisma'
-import jwt from 'jsonwebtoken'
+import { getSessionUser } from '@/lib/auth-session'
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number, role: string }
-    if (decoded.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    const user = await getSessionUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     // Get all products this admin added
     const myProducts = await prisma.product.findMany({
-      where: { added_by: decoded.userId },
+      where: { added_by: user.id },
       select: { id: true }
     })
     const myProductIds = myProducts.map((p: { id: number }) => p.id)
@@ -60,11 +58,9 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number, role: string }
-    if (decoded.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    const user = await getSessionUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { orderId, status } = await request.json()
 
@@ -91,11 +87,9 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number, role: string }
-    if (decoded.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    const user = await getSessionUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { orderId } = await request.json()
 

@@ -6,10 +6,25 @@ export async function POST(request:Request) {
   try {
     const body = await request.json()
     const { name, email, password, hospital_name } = body
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : ''
+
+    if (!name?.trim() || !normalizedEmail || !password?.trim()) {
+      return NextResponse.json(
+        { error: 'Name, email, and password are required' },
+        { status: 400 }
+      )
+    }
+
+    if (password.length < 8) {
+      return NextResponse.json(
+        { error: 'Password must be at least 8 characters' },
+        { status: 400 }
+      )
+    }
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email }
+      where: { email: normalizedEmail }
     })
 
     if (existingUser) {
@@ -25,10 +40,10 @@ export async function POST(request:Request) {
     // Create the user
     const user = await prisma.user.create({
       data: {
-        name,
-        email,
+        name: name.trim(),
+        email: normalizedEmail,
         password: hashedPassword,
-        hospital_name,
+        hospital_name: typeof hospital_name === 'string' ? hospital_name.trim() : null,
         role: 'doctor'
       }
     })

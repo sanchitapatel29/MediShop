@@ -1,7 +1,6 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Cookies from 'js-cookie'
 
 export default function RequestProduct() {
   const router = useRouter()
@@ -13,24 +12,19 @@ export default function RequestProduct() {
   const [error, setError] = useState('')
 
   const handleSubmit = async () => {
-    const token = Cookies.get('token')
-    if (!token) {
-      router.push('/login')
-      return
-    }
-
     setLoading(true)
     const res = await fetch('/api/requests', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(formData)
     })
 
     setLoading(false)
-    if (res.ok) {
+    if (res.status === 401) {
+      router.push('/login')
+    } else if (res.ok) {
       setSuccess(true)
     } else {
       const data = await res.json()

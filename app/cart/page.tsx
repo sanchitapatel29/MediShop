@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
 
 interface CartItem {
   id: number;
@@ -60,12 +59,6 @@ export default function Cart() {
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const handleCheckout = async () => {
-    const token = Cookies.get("token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
     setMessage("");
     setLoading(true);
 
@@ -73,7 +66,6 @@ export default function Cart() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         items: cart.map((item) => ({
@@ -90,7 +82,9 @@ export default function Cart() {
     setLoading(false);
     const data = await res.json();
 
-    if (res.ok) {
+    if (res.status === 401) {
+      router.push("/login");
+    } else if (res.ok) {
       setMessageType("success");
       const amountToPay = paymentType === "split" ? total * 0.6 : total;
       localStorage.setItem(

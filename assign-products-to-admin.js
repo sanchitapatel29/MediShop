@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // Assign existing products without an owner to a specific admin
 // Usage: node assign-products-to-admin.js admin@email.com
 

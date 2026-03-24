@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { BrandLogo } from "../brand-logo";
 
 interface Product {
   id: number;
@@ -96,13 +97,8 @@ export default function Products() {
       <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#0b1623]/90 px-4 py-4 backdrop-blur-xl md:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 bg-slate-100 text-sm font-bold text-slate-900">
-              M
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">Buyer Workspace</p>
-              <span className="text-lg font-semibold tracking-tight md:text-xl">MediShop Catalog</span>
-            </div>
+            <BrandLogo size="sm" />
+            <span className="font-display text-lg font-semibold tracking-[-0.04em] text-slate-100 md:text-xl">MedEquip Catalog</span>
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">
@@ -139,7 +135,7 @@ export default function Products() {
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
               <p className="text-xs uppercase tracking-[0.34em] text-slate-400">Procurement Catalog</p>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">Source certified medical equipment with clearer buying signals.</h1>
+              <h1 className="font-display mt-3 text-3xl font-semibold tracking-[-0.04em] md:text-4xl">Source certified medical equipment with clearer buying signals.</h1>
               <p className="mt-3 text-sm leading-relaxed text-slate-400 md:text-base">
                 Browse institutional equipment categories, review stock availability, and place orders from a more structured B2B catalog.
               </p>

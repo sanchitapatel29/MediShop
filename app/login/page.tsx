@@ -1,33 +1,40 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Cookies from 'js-cookie'
+import { getProviders, signIn } from 'next-auth/react'
+import { BrandLogo } from '../brand-logo'
+
+type ProviderMap = Awaited<ReturnType<typeof getProviders>>
 
 export default function Login() {
   const router = useRouter()
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [providers, setProviders] = useState<ProviderMap>(null)
+
+  useEffect(() => {
+    getProviders().then((availableProviders) => setProviders(availableProviders))
+  }, [])
 
   const handleSubmit = async () => {
     setLoading(true)
     setError('')
 
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...formData, portal: 'doctor' })
+    const result = await signIn('credentials', {
+      email: formData.email,
+      password: formData.password,
+      portal: 'doctor',
+      redirect: false
     })
 
-    const data = await res.json()
     setLoading(false)
 
-    if (res.ok) {
-      Cookies.set('token', data.token)
-      Cookies.set('role', data.user.role)
+    if (!result?.error) {
       router.push('/products')
+      router.refresh()
     } else {
-      setError(data.error)
+      setError(result.error)
     }
   }
 
@@ -59,13 +66,8 @@ export default function Login() {
 
         <section className="rounded-[32px] border border-slate-800 bg-slate-950/55 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.26)] sm:p-8">
           <div className="mb-8 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-700 bg-slate-100 text-sm font-bold text-slate-900">
-              M
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">MediShop</p>
-              <p className="text-xl font-semibold text-slate-100">Customer Sign In</p>
-            </div>
+            <BrandLogo />
+            <p className="font-display text-xl font-semibold tracking-[-0.04em] text-slate-100">MedEquip</p>
           </div>
 
           {error && (
@@ -75,6 +77,14 @@ export default function Login() {
           )}
 
           <div className="space-y-4">
+            {providers?.google && (
+              <button
+                onClick={() => signIn('google', { callbackUrl: '/products' })}
+                className="w-full rounded-xl border border-slate-700 bg-transparent py-3 font-semibold text-slate-100 transition hover:border-slate-500 hover:bg-slate-900/60"
+              >
+                Continue with Google
+              </button>
+            )}
             <div>
               <label className="mb-2 block text-sm text-slate-400">Email Address</label>
               <input

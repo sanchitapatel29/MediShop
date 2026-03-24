@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { getMultipleOrderDetails, saveOrderDetails } from '@/lib/order-details-store'
 import { prisma } from '@/lib/prisma'
-import jwt from 'jsonwebtoken'
+import { getSessionUser } from '@/lib/auth-session'
 
 type OrderProduct = {
   id: number
@@ -13,10 +13,8 @@ type OrderProduct = {
 
 export async function POST(request: Request) {
   try {
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number }
+    const user = await getSessionUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const { items, totalPrice, paymentType, deliveryDetails } = await request.json()
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -96,7 +94,7 @@ export async function POST(request: Request) {
 
       return tx.order.create({
         data: {
-          user_id: decoded.userId,
+          user_id: user.id,
           total_price: totalPrice,
           amount_paid: amountPaid,
           payment_type: paymentType || 'full',
@@ -190,15 +188,13 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number }
+    const user = await getSessionUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const orders = await prisma.order.findMany({
-      where: { user_id: decoded.userId },
+      where: { user_id: user.id },
       include: {
         items: { include: { product: true } }
       },

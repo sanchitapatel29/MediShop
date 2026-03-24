@@ -1,6 +1,5 @@
 "use client";
 
-import Cookies from "js-cookie";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
@@ -114,12 +113,6 @@ export default function ProductDetailPage() {
   };
 
   const submitReview = async () => {
-    const token = Cookies.get("token");
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
     if (!product || !reviewText.trim()) return;
 
     setSubmitting(true);
@@ -129,7 +122,6 @@ export default function ProductDetailPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           rating,
@@ -138,6 +130,10 @@ export default function ProductDetailPage() {
       });
 
       const data = await response.json();
+      if (response.status === 401) {
+        router.push("/login");
+        return;
+      }
       if (!response.ok) {
         throw new Error(data.error || "Failed to add review");
       }
@@ -186,6 +182,7 @@ export default function ProductDetailPage() {
   }
 
   const gallery = product.imageUrls.length ? product.imageUrls : [];
+  const supplierName = product.admin?.hospital_name || product.admin?.name || "Verified supplier";
 
   return (
     <main className="app-shell min-h-screen text-slate-100">
@@ -213,34 +210,36 @@ export default function ProductDetailPage() {
           </div>
         )}
 
-        <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-          <section className="rounded-[32px] border border-slate-800 bg-slate-950/42 p-5 shadow-[0_24px_60px_rgba(2,6,23,0.22)] sm:p-6">
+        <div className="grid gap-8 lg:grid-cols-[1.02fr_0.98fr]">
+          <section className="rounded-[32px] border border-slate-800 bg-slate-950/36 p-5 shadow-[0_24px_60px_rgba(2,6,23,0.18)] sm:p-6">
             <div className="overflow-hidden rounded-[28px] border border-slate-800 bg-[#09111a]">
               {gallery[selectedImage] ? (
                 <img
                   src={gallery[selectedImage]}
                   alt={product.name}
-                  className="h-72 w-full object-cover sm:h-96 lg:h-[460px]"
+                  className="h-72 w-full object-cover sm:h-96 lg:h-[480px]"
                 />
               ) : (
-                <div className="flex h-72 items-center justify-center text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500 sm:h-96 lg:h-[460px]">
+                <div className="flex h-72 items-center justify-center text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500 sm:h-96 lg:h-[480px]">
                   No image
                 </div>
               )}
             </div>
 
             {gallery.length > 1 && (
-              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
                 {gallery.map((imageUrl, index) => (
                   <button
                     key={imageUrl + index}
                     onClick={() => setSelectedImage(index)}
-                    className={`overflow-hidden rounded-2xl border bg-[#09111a] ${selectedImage === index ? "border-slate-600" : "border-slate-800"}`}
+                    className={`overflow-hidden rounded-2xl border bg-[#09111a] ${
+                      selectedImage === index ? "border-slate-500" : "border-slate-800"
+                    }`}
                   >
                     <img
                       src={imageUrl}
                       alt={`${product.name} ${index + 1}`}
-                      className="h-24 w-full object-cover"
+                      className="h-20 w-full object-cover"
                     />
                   </button>
                 ))}
@@ -248,142 +247,171 @@ export default function ProductDetailPage() {
             )}
           </section>
 
-          <section className="space-y-5">
-            <div className="rounded-[32px] border border-slate-800 bg-slate-950/42 p-6 shadow-[0_24px_60px_rgba(2,6,23,0.22)]">
+          <section className="rounded-[32px] border border-slate-800 bg-slate-950/36 p-6 shadow-[0_24px_60px_rgba(2,6,23,0.18)]">
+            <div className="border-b border-white/8 pb-6">
               <span className="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-slate-300">
                 {product.category}
               </span>
-              <h1 className="mt-4 text-3xl font-semibold tracking-tight">{product.name}</h1>
-              <p className="mt-3 text-sm leading-relaxed text-slate-400">{product.description}</p>
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">{product.name}</h1>
+              <p className="mt-3 text-base leading-relaxed text-slate-400">{product.description}</p>
 
-              <div className="mt-6 rounded-2xl border border-slate-800 bg-[#09111a] p-5">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Price</p>
-                <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-100">₹{product.price}</p>
+              <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-slate-400">
+                <p>
+                  Rating:{" "}
+                  <span className="font-semibold text-slate-100">
+                    {product.reviews.length ? averageRating.toFixed(1) : "New"}
+                  </span>
+                  <span className="text-slate-500"> / 5</span>
+                </p>
+                <span className="h-1 w-1 rounded-full bg-slate-600" />
+                <p>{product.reviews.length} review(s)</p>
+              </div>
+            </div>
+
+            <div className="py-6">
+              <div>
+                <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Price</p>
+                <p className="mt-2 text-4xl font-semibold tracking-tight text-slate-100">Rs {product.price}</p>
+
                 {product.stock <= 0 ? (
                   <p className="mt-3 text-sm font-medium text-red-300">Out of stock</p>
-                ) : product.stock < 3 ? (
-                  <p className="mt-3 text-sm font-medium text-amber-200">Only {product.stock} left</p>
-                ) : null}
-              </div>
+                ) : (
+                  <p className="mt-3 text-sm text-slate-400">
+                    {product.stock < 3 ? `Only ${product.stock} unit(s) left` : `${product.stock} unit(s) available`}
+                  </p>
+                )}
 
-              <button
-                onClick={addToCart}
-                disabled={product.stock <= 0}
-                className="mt-6 w-full rounded-xl bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-white disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
-              >
-                {product.stock <= 0 ? "Out of Stock" : "Add to Cart"}
-              </button>
+                <div className="mt-6 space-y-4 border-t border-white/8 pt-5 text-sm">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
+                    <span className="w-28 text-slate-500">Supplier</span>
+                    <span className="text-slate-200">{supplierName}</span>
+                  </div>
+                  <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
+                    <span className="w-28 text-slate-500">Certification</span>
+                    <span className="text-slate-200">{product.certification || "Standard verified supply"}</span>
+                  </div>
+                  <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
+                    <span className="w-28 text-slate-500">Listed On</span>
+                    <span className="text-slate-200">
+                      {new Date(product.created_at).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-8 border-t border-white/8 pt-6">
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Purchase</p>
+                  <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
+                  Add this instrument to your cart and continue with institutional checkout.
+                  </p>
+                  <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                    <button
+                      onClick={addToCart}
+                      disabled={product.stock <= 0}
+                      className="rounded-xl bg-slate-100 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-white disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+                    >
+                      {product.stock <= 0 ? "Out of Stock" : "Add to Cart"}
+                    </button>
+                    <button
+                      onClick={() => router.push("/cart")}
+                      className="rounded-xl border border-slate-700 px-6 py-3 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-900/60"
+                    >
+                      View Cart
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="rounded-[32px] border border-slate-800 bg-slate-950/42 p-6 shadow-[0_24px_60px_rgba(2,6,23,0.22)]">
-              <h2 className="text-lg font-semibold">Instrument Details</h2>
-              <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-slate-400">
+            <div className="border-t border-white/8 pt-6">
+              <h2 className="text-xl font-semibold">Instrument Details</h2>
+              <p className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-400">
                 {product.detailedDescription || product.description}
               </p>
-              <div className="mt-5 space-y-2 text-sm text-slate-500">
-                {product.certification && <p>Certification: {product.certification}</p>}
-                {product.admin && <p>Supplier: {product.admin.hospital_name || product.admin.name}</p>}
-                <p>
-                  Added on{" "}
-                  {new Date(product.created_at).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-[32px] border border-slate-800 bg-slate-950/42 p-6 shadow-[0_24px_60px_rgba(2,6,23,0.22)]">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-lg font-semibold">Customer Rating</h2>
-                <span className="text-sm text-slate-500">{product.reviews.length} review(s)</span>
-              </div>
-              <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-100">
-                {product.reviews.length ? averageRating.toFixed(1) : "New"}
-              </p>
             </div>
           </section>
         </div>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[0.88fr_1.12fr]">
-          <section className="rounded-[32px] border border-slate-800 bg-slate-950/42 p-5 shadow-[0_24px_60px_rgba(2,6,23,0.2)] sm:p-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-lg font-semibold">Write a Review</h2>
-                <p className="mt-1 text-xs text-slate-500">Visible to all customers</p>
-              </div>
-              <select
-                value={rating}
-                onChange={(event) => setRating(Number(event.target.value))}
-                className="rounded-lg border border-slate-800 bg-[#09111a] px-3 py-2 text-sm text-slate-100 focus:border-slate-600 focus:outline-none"
-              >
-                {[5, 4, 3, 2, 1].map((value) => (
-                  <option key={value} value={value} className="bg-[#09111a]">
-                    {value} / 5
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              <textarea
-                rows={4}
-                value={reviewText}
-                onChange={(event) => setReviewText(event.target.value)}
-                placeholder="Share your experience with this instrument"
-                className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:border-slate-600 focus:outline-none"
-              />
-              <button
-                onClick={submitReview}
-                disabled={submitting}
-                className="w-full rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {submitting ? "Submitting..." : "Submit Review"}
-              </button>
-            </div>
-          </section>
-
-          <section className="rounded-[32px] border border-slate-800 bg-slate-950/42 p-5 shadow-[0_24px_60px_rgba(2,6,23,0.2)] sm:p-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-xl font-semibold">Customer Reviews</h2>
-              <span className="text-sm text-slate-500">{product.reviews.length} total</span>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              {product.reviews.length === 0 ? (
-                <div className="rounded-2xl border border-slate-800 bg-[#09111a] p-5 text-sm text-slate-500">
-                  No reviews yet.
+        <section className="mt-10 rounded-[32px] border border-slate-800 bg-slate-950/36 p-6 shadow-[0_24px_60px_rgba(2,6,23,0.18)] sm:p-7">
+          <div className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
+            <div className="border-b border-white/8 pb-8 lg:border-b-0 lg:border-r lg:border-white/8 lg:pb-0 lg:pr-8">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold">Write a Review</h2>
+                  <p className="mt-1 text-sm text-slate-500">Visible to all customers</p>
                 </div>
-              ) : (
-                product.reviews.map((review) => (
-                  <article
-                    key={review.id}
-                    className="rounded-2xl border border-slate-800 bg-[#09111a] p-5"
-                  >
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                      <div>
-                        <p className="font-semibold text-slate-100">{review.userName}</p>
-                        <p className="text-xs text-slate-500">{review.hospitalName || "Customer"}</p>
-                      </div>
-                      <div className="text-sm text-slate-500">
-                        <p>{review.rating} / 5</p>
-                        <p>
-                          {new Date(review.createdAt).toLocaleDateString("en-IN", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-slate-300">{review.comment}</p>
-                  </article>
-                ))
-              )}
+                <select
+                  value={rating}
+                  onChange={(event) => setRating(Number(event.target.value))}
+                  className="rounded-lg border border-slate-800 bg-[#09111a] px-3 py-2 text-sm text-slate-100 focus:border-slate-600 focus:outline-none"
+                >
+                  {[5, 4, 3, 2, 1].map((value) => (
+                    <option key={value} value={value} className="bg-[#09111a]">
+                      {value} / 5
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                <textarea
+                  rows={5}
+                  value={reviewText}
+                  onChange={(event) => setReviewText(event.target.value)}
+                  placeholder="Share your experience with this instrument"
+                  className="w-full rounded-2xl border border-slate-800 bg-[#09111a] px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:border-slate-600 focus:outline-none"
+                />
+                <button
+                  onClick={submitReview}
+                  disabled={submitting}
+                  className="w-full rounded-xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {submitting ? "Submitting..." : "Submit Review"}
+                </button>
+              </div>
             </div>
-          </section>
-        </div>
+
+            <div>
+              <div>
+                <h2 className="text-xl font-semibold">Customer Reviews</h2>
+                <p className="mt-1 text-sm text-slate-500">{product.reviews.length} total review(s)</p>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                {product.reviews.length === 0 ? (
+                  <div className="rounded-2xl border border-slate-800 bg-[#09111a] p-5 text-sm text-slate-500">
+                    No reviews yet.
+                  </div>
+                ) : (
+                  product.reviews.map((review) => (
+                    <article key={review.id} className="border-b border-white/8 pb-4 last:border-b-0 last:pb-0">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="font-semibold text-slate-100">{review.userName}</p>
+                          <p className="text-xs text-slate-500">{review.hospitalName || "Customer"}</p>
+                        </div>
+                        <div className="text-sm text-slate-500">
+                          <p>{review.rating} / 5</p>
+                          <p>
+                            {new Date(review.createdAt).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-slate-300">{review.comment}</p>
+                    </article>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   );

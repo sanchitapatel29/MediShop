@@ -2,17 +2,15 @@ import { NextResponse } from 'next/server'
 import type { Prisma } from '@prisma/client'
 import { deleteReviewsByUser } from '@/lib/product-content-store'
 import { prisma } from '@/lib/prisma'
-import jwt from 'jsonwebtoken'
+import { getSessionUser } from '@/lib/auth-session'
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number, role: string }
+    const sessionUser = await getSessionUser()
+    if (!sessionUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: sessionUser.id },
       select: {
         id: true,
         name: true,
@@ -75,22 +73,20 @@ export async function GET(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE() {
   try {
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number }
+    const sessionUser = await getSessionUser()
+    if (!sessionUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: sessionUser.id },
       select: { id: true }
     })
 
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
 
     const userOrders = await prisma.order.findMany({
-      where: { user_id: decoded.userId },
+      where: { user_id: user.id },
       select: { id: true }
     })
 
@@ -104,15 +100,15 @@ export async function DELETE(request: Request) {
       }
 
       await tx.notification.deleteMany({
-        where: { user_id: decoded.userId }
+        where: { user_id: user.id }
       })
 
       await tx.productRequest.deleteMany({
-        where: { user_id: decoded.userId }
+        where: { user_id: user.id }
       })
 
       await tx.product.updateMany({
-        where: { added_by: decoded.userId },
+        where: { added_by: user.id },
         data: { added_by: null }
       })
 
@@ -123,11 +119,11 @@ export async function DELETE(request: Request) {
       }
 
       await tx.user.delete({
-        where: { id: decoded.userId }
+        where: { id: user.id }
       })
     })
 
-    await deleteReviewsByUser(decoded.userId)
+    await deleteReviewsByUser(user.id)
 
     return NextResponse.json({ message: 'Profile deleted successfully' })
   } catch {

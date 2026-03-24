@@ -1,35 +1,28 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAllProductContent, saveProductContent } from '@/lib/product-content-store'
-import jwt from 'jsonwebtoken'
+import { getSessionUser } from '@/lib/auth-session'
 
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url)
     const myProducts = url.searchParams.get('myProducts')
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
+    const user = await getSessionUser()
     const allProductContent = await getAllProductContent()
     
     // If requesting "my products" only (for admin dashboard)
-    if (myProducts === 'true' && token) {
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number, role: string }
-        if (decoded.role === 'admin') {
-          const products = await prisma.product.findMany({
-            where: { added_by: decoded.userId },
-            orderBy: { created_at: 'desc' }
-          })
-          return NextResponse.json(
-            products.map((product: { id: number } & Record<string, unknown>) => ({
-              ...product,
-              detailedDescription: allProductContent[String(product.id)]?.detailedDescription || '',
-              imageUrls: allProductContent[String(product.id)]?.imageUrls || []
-            }))
-          )
-        }
-      } catch {
-        // Token invalid, fall through to return all products
-      }
+    if (myProducts === 'true' && user?.role === 'admin') {
+      const products = await prisma.product.findMany({
+        where: { added_by: user.id },
+        orderBy: { created_at: 'desc' }
+      })
+      return NextResponse.json(
+        products.map((product: { id: number } & Record<string, unknown>) => ({
+          ...product,
+          detailedDescription: allProductContent[String(product.id)]?.detailedDescription || '',
+          imageUrls: allProductContent[String(product.id)]?.imageUrls || []
+        }))
+      )
     }
     
     // Default: return all products (for store view)
@@ -53,16 +46,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-    let addedBy = null
-    
-    if (token) {
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { userId: number }
-        addedBy = decoded.userId
-      } catch {
-        // Token invalid, continue without admin tracking
-      }
+    const user = await getSessionUser()
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
@@ -76,7 +62,7 @@ export async function POST(request: Request) {
         price: parseFloat(price),
         stock: parseInt(stock),
         certification,
-        added_by: addedBy
+        added_by: user.id
       }
     })
 
