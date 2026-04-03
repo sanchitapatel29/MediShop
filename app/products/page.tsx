@@ -98,7 +98,7 @@ export default function Products() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <BrandLogo size="sm" />
-            <span className="font-display text-lg font-semibold tracking-[-0.04em] text-slate-100 md:text-xl">MedEquip Catalog</span>
+            <span className="font-display text-lg font-semibold tracking-[-0.04em] text-slate-100 md:text-xl">VitalOps Catalog</span>
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">

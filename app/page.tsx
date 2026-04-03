@@ -1,17 +1,11 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BrandLogo } from "./brand-logo";
 
 export default function Home() {
   const router = useRouter();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const [listedProducts, setListedProducts] = useState(0);
-  const [animatedProducts, setAnimatedProducts] = useState(0);
-  const [animatedHospitals, setAnimatedHospitals] = useState(0);
-  const [animatedAccuracy, setAnimatedAccuracy] = useState(0);
-  const [statsVisible, setStatsVisible] = useState(false);
-  const statsRef = useRef<HTMLElement | null>(null);
 
   const faqs = [
     {
@@ -36,78 +30,27 @@ export default function Home() {
     },
   ];
 
-  useEffect(() => {
-    fetch("/api/products")
-      .then((response) => response.json())
-      .then((data) => {
-        if (!Array.isArray(data)) return;
-        setListedProducts(data.filter((product) => product.stock > 0).length);
-      })
-      .catch(() => undefined);
-  }, []);
-
-  useEffect(() => {
-    const section = statsRef.current;
-
-    if (!section) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setStatsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.35 }
-    );
-
-    observer.observe(section);
-
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!statsVisible) return;
-
-    const duration = 1200;
-    const start = performance.now();
-
-    const animate = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-
-      setAnimatedProducts(Math.round(listedProducts * eased));
-      setAnimatedHospitals(Math.round(500 * eased));
-      setAnimatedAccuracy(Number((99.8 * eased).toFixed(1)));
-
-      if (progress < 1) {
-        window.requestAnimationFrame(animate);
-      }
-    };
-
-    const frameId = window.requestAnimationFrame(animate);
-
-    return () => window.cancelAnimationFrame(frameId);
-  }, [listedProducts, statsVisible]);
-
   return (
     <main className="app-shell min-h-screen text-slate-100">
-      <nav className="border-b border-white/10 bg-[#0b1623]/90 px-4 py-4 backdrop-blur-xl md:px-8">
+      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#0b1623]/92 px-4 py-4 backdrop-blur-xl md:px-8">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <BrandLogo />
-            <p className="font-display text-[22px] font-semibold tracking-[-0.04em] text-white">MedEquip</p>
+            <BrandLogo size="sm" />
+            <div>
+              <p className="font-display text-[20px] font-semibold tracking-[-0.04em] text-white">VitalOps</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Healthcare Operations</p>
+            </div>
           </div>
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             <button
               onClick={() => router.push("/login")}
-              className="rounded-full border border-slate-600 bg-slate-950/45 px-6 py-3 text-base font-medium text-slate-100 transition hover:border-cyan-400/40 hover:bg-slate-900/75 sm:min-w-[168px]"
+              className="rounded-full border border-slate-700 bg-transparent px-5 py-2.5 text-sm font-medium text-slate-200 transition duration-200 hover:border-slate-500 hover:bg-white/5 sm:min-w-[154px]"
             >
               Buyer Sign In
             </button>
             <button
               onClick={() => router.push("/admin/login")}
-              className="rounded-full bg-[linear-gradient(135deg,#dbeafe,#a5f3fc)] px-6 py-3 text-base font-semibold text-slate-950 shadow-[0_18px_36px_rgba(34,211,238,0.18)] transition hover:brightness-105 sm:min-w-[168px]"
+              className="rounded-full bg-cyan-100 px-5 py-2.5 text-sm font-semibold text-slate-950 transition duration-200 hover:bg-cyan-50 sm:min-w-[154px]"
             >
               Supplier Portal
             </button>
@@ -117,10 +60,10 @@ export default function Home() {
 
       <section className="mx-auto max-w-6xl px-4 py-10 md:px-8 md:py-16">
         <div className="rounded-[36px] border border-white/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.94),rgba(9,18,29,0.8))] p-8 shadow-[0_40px_100px_rgba(2,6,23,0.38)] md:p-12">
-          <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+          <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
             <div>
               <div className="inline-flex items-center rounded-full border border-cyan-300/20 bg-cyan-400/10 px-4 py-2 text-[11px] font-medium uppercase tracking-[0.24em] text-cyan-100">
-                MedEquip for procurement teams
+                VitalOps for procurement teams
               </div>
               <div className="mt-6 max-w-4xl">
                 <h1 className="font-display text-4xl font-semibold tracking-[-0.06em] text-balance md:text-6xl">
@@ -147,105 +90,111 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="grid gap-4">
-              <div className="rounded-[28px] border border-cyan-400/15 bg-[linear-gradient(180deg,rgba(10,18,30,0.92),rgba(7,12,22,0.96))] p-6">
-                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Why teams use it</p>
-                <div className="mt-5 space-y-4">
-                  {[
-                    "Centralized equipment catalog with live stock visibility",
-                    "Buyer and supplier portals with separate workflows",
-                    "Request handling for items not yet listed",
-                  ].map((item) => (
-                    <div key={item} className="flex items-start gap-3">
-                      <span className="mt-1 h-2.5 w-2.5 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(103,232,249,0.55)]" />
-                      <p className="text-sm leading-relaxed text-slate-300">{item}</p>
-                    </div>
-                  ))}
+            <div className="rounded-[28px] border border-cyan-400/15 bg-[linear-gradient(180deg,rgba(10,18,30,0.92),rgba(7,12,22,0.96))] p-6">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Recent Orders</p>
+                  <p className="mt-2 text-2xl font-semibold text-white">Operations Snapshot</p>
                 </div>
+                <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-200">
+                  Live
+                </span>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="mt-5 space-y-3">
                 {[
-                  { label: "Institutional Orders", value: "B2B Flow" },
-                  { label: "Supplier Access", value: "Controlled" },
-                  { label: "Request Tracking", value: "Built In" },
+                  { name: "Ventilator", meta: "City General Hospital", status: "Delivered", tone: "bg-emerald-400/10 text-emerald-200" },
+                  { name: "ECG Machine", meta: "Metro Care Clinic", status: "Pending", tone: "bg-amber-400/10 text-amber-200" },
+                  { name: "Syringe Pump", meta: "Apex Health Center", status: "Processing", tone: "bg-cyan-400/10 text-cyan-200" },
                 ].map((item) => (
-                  <div key={item.label} className="rounded-[24px] border border-slate-800 bg-slate-950/35 p-5">
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{item.label}</p>
-                    <p className="mt-2 font-display text-2xl font-semibold tracking-[-0.04em] text-slate-100">{item.value}</p>
+                  <div key={item.name} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
+                    <div>
+                      <p className="font-medium text-white">{item.name}</p>
+                      <p className="mt-1 text-sm text-slate-400">{item.meta}</p>
+                    </div>
+                    <span className={`rounded-full px-3 py-1 text-xs font-medium ${item.tone}`}>
+                      {item.status}
+                    </span>
                   </div>
                 ))}
+              </div>
+
+              <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Why it works</p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                  One catalog, one ordering flow, and one place to handle urgent sourcing requests.
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section ref={statsRef} className="mx-auto max-w-6xl px-4 pb-8 md:px-8 md:pb-10">
-        <div className="grid gap-4 md:grid-cols-3">
+      <section className="mx-auto max-w-6xl px-4 pb-12 md:px-8 md:pb-16">
+        <div className="grid gap-6 md:grid-cols-3">
           {[
-            { label: "Products In Stock", value: animatedProducts, suffix: "" },
-            { label: "Hospitals Served", value: animatedHospitals, suffix: "+" },
-            { label: "Order Accuracy", value: animatedAccuracy, suffix: "%" },
-          ].map((stat) => (
-            <div key={stat.label} className="rounded-[28px] border border-slate-800 bg-slate-950/45 p-6 shadow-[0_18px_44px_rgba(2,6,23,0.18)]">
-              <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{stat.label}</p>
-              <p className="mt-3 font-display text-3xl font-semibold tracking-[-0.04em] text-slate-100">
-                {stat.value}
-                {stat.suffix}
-              </p>
+            {
+              title: "Centralized equipment catalog",
+              body: "Review available products and compare procurement options from one structured workspace.",
+            },
+            {
+              title: "Faster sourcing workflow",
+              body: "Place orders and handle unlisted equipment requests without switching between tools.",
+            },
+            {
+              title: "Clear supplier coordination",
+              body: "Keep buyers and supplier teams aligned through one operational flow.",
+            },
+          ].map((item) => (
+            <div key={item.title} className="rounded-[24px] border border-slate-800 bg-slate-950/35 p-6">
+              <p className="text-lg font-semibold text-slate-100">{item.title}</p>
+              <p className="mt-3 text-sm leading-relaxed text-slate-400">{item.body}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 pb-12 md:px-8 md:pb-16">
-        <div className="rounded-[32px] border border-slate-800 bg-slate-950/45 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.2)] md:p-8">
-          <div className="mb-8 max-w-2xl">
-            <div className="mb-6 flex items-center gap-4">
-              <span className="h-px flex-1 bg-gradient-to-r from-cyan-300/40 to-transparent" />
-              <p className="text-xs uppercase tracking-[0.34em] text-cyan-200/75">Frequently Asked Questions</p>
-            </div>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
-              Quick answers before you place an order.
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-slate-400 md:text-base">
-              Review the basics around supplier access, procurement flow, sourcing, and payments.
-            </p>
-          </div>
+      <section className="mx-auto max-w-4xl px-4 pb-14 md:px-8 md:pb-20">
+        <div className="mb-8 text-center">
+          <h2 className="text-3xl font-semibold tracking-tight text-slate-100 md:text-4xl">
+            Frequently asked questions
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-slate-400 md:text-base">
+            A few quick answers on procurement flow, supplier access, and sourcing.
+          </p>
+        </div>
 
-          <div className="space-y-3">
-            {faqs.map((faq, index) => {
-              const isOpen = openFaq === index;
+        <div className="space-y-3">
+          {faqs.map((faq, index) => {
+            const isOpen = openFaq === index;
 
-              return (
-                <div
-                  key={faq.question}
-                  className={`rounded-2xl border transition ${
-                    isOpen
-                      ? "border-slate-700 bg-[#09111a]"
-                      : "border-slate-800 bg-slate-950/35"
-                  }`}
+            return (
+              <div
+                key={faq.question}
+                className={`rounded-2xl border transition ${
+                  isOpen
+                    ? "border-slate-700 bg-[#09111a]"
+                    : "border-slate-800 bg-slate-950/25"
+                }`}
+              >
+                <button
+                  onClick={() => setOpenFaq(isOpen ? null : index)}
+                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-white/[0.02] md:px-6"
                 >
-                  <button
-                    onClick={() => setOpenFaq(isOpen ? null : index)}
-                    className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left md:px-6"
-                  >
-                    <span className="text-base font-semibold text-slate-100 md:text-lg">
-                      {faq.question}
-                    </span>
-                    <span className="text-xl text-slate-500">{isOpen ? "−" : "+"}</span>
-                  </button>
+                  <span className="text-base font-semibold text-slate-100 md:text-lg">
+                    {faq.question}
+                  </span>
+                  <span className="text-xl text-slate-500">{isOpen ? "-" : "+"}</span>
+                </button>
 
-                  {isOpen && (
-                    <div className="px-5 pb-5 text-sm leading-relaxed text-slate-400 md:px-6 md:pb-6 md:text-base">
-                      {faq.answer}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                {isOpen && (
+                  <div className="px-5 pb-5 text-sm leading-relaxed text-slate-400 md:px-6 md:pb-6 md:text-base">
+                    {faq.answer}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
     </main>

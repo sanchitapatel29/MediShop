@@ -9,7 +9,7 @@ export function SiteFooter() {
           <div className="flex items-center gap-3">
             <BrandLogo size="sm" />
             <div>
-              <p className="font-display text-xl font-semibold tracking-[-0.04em] text-white">MedEquip</p>
+              <p className="font-display text-xl font-semibold tracking-[-0.04em] text-white">VitalOps</p>
               <p className="text-sm text-slate-400">Medical equipment sourcing and supplier operations.</p>
             </div>
           </div>
@@ -55,7 +55,7 @@ export function SiteFooter() {
         <div>
           <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">Contact</p>
           <div className="mt-4 space-y-3 text-sm text-slate-300">
-            <p>support@medequip.com</p>
+            <p>support@vitalops.io</p>
             <p>+91 1800 210 4500</p>
             <p>Mon - Sat, 9:00 AM - 7:00 PM</p>
             <p className="text-slate-500">Procurement support, supplier onboarding, and order assistance.</p>
@@ -64,7 +64,7 @@ export function SiteFooter() {
       </div>
 
       <div className="mx-auto mt-8 flex max-w-6xl flex-col gap-3 border-t border-white/10 pt-5 text-sm text-slate-500 md:flex-row md:items-center md:justify-between">
-        <p>© 2026 MedEquip. All rights reserved.</p>
+        <p>© 2026 VitalOps. All rights reserved.</p>
         <div className="flex gap-5">
           <span>Privacy Policy</span>
           <span>Terms of Use</span>

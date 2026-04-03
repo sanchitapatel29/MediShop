@@ -36,7 +36,8 @@ export async function GET(request: Request) {
         imageUrls: allProductContent[String(product.id)]?.imageUrls || []
       }))
     )
-  } catch {
+  } catch (error) {
+    console.error('GET /api/products failed:', error)
     return NextResponse.json(
       { error: 'Something went wrong' },
       { status: 500 }
@@ -82,7 +83,8 @@ export async function POST(request: Request) {
       detailedDescription: typeof detailedDescription === 'string' ? detailedDescription.trim() : '',
       imageUrls: parsedImageUrls
     })
-  } catch {
+  } catch (error) {
+    console.error('POST /api/products failed:', error)
     return NextResponse.json(
       { error: 'Something went wrong' },
       { status: 500 }

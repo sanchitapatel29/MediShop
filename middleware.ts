@@ -6,16 +6,17 @@ export default auth((request) => {
   const isLoggedIn = !!request.auth
   const role = request.auth?.user?.role
   const isAdminLogin = pathname === '/admin/login'
+  const isAdminSignup = pathname === '/admin/signup'
   const isCustomerLoginRoute = pathname === '/login'
   const isCustomerSignupRoute = pathname === '/signup'
   const isCustomerProtectedRoute = ['/profile', '/orders', '/request', '/cart'].includes(pathname)
 
   if (pathname.startsWith('/admin')) {
-    if (!isLoggedIn && !isAdminLogin) {
+    if (!isLoggedIn && !isAdminLogin && !isAdminSignup) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
 
-    if (isLoggedIn && role !== 'admin' && !isAdminLogin) {
+    if (isLoggedIn && role !== 'admin' && !isAdminLogin && !isAdminSignup) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
   }
@@ -32,6 +33,10 @@ export default auth((request) => {
   // Allow the signup page even for signed-in users so the landing-page CTA
   // always opens account creation instead of bouncing to /products.
   if (isCustomerSignupRoute) {
+    return NextResponse.next()
+  }
+
+  if (isAdminSignup) {
     return NextResponse.next()
   }
 

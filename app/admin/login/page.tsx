@@ -2,13 +2,13 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { getProviders, signIn } from 'next-auth/react'
+import type { FormEvent } from 'react'
 import { BrandLogo } from '../../brand-logo'
 
 type ProviderMap = Awaited<ReturnType<typeof getProviders>>
 
 export default function AdminLogin() {
   const router = useRouter()
-  const [formData, setFormData] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [providers, setProviders] = useState<ProviderMap>(null)
@@ -17,13 +17,18 @@ export default function AdminLogin() {
     getProviders().then((availableProviders) => setProviders(availableProviders))
   }, [])
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     setLoading(true)
     setError('')
 
+    const form = new FormData(event.currentTarget)
+    const email = form.get('email')?.toString().trim().toLowerCase() ?? ''
+    const password = form.get('password')?.toString() ?? ''
+
     const result = await signIn('credentials', {
-      email: formData.email,
-      password: formData.password,
+      email,
+      password,
       portal: 'admin',
       redirect: false
     })
@@ -69,7 +74,7 @@ export default function AdminLogin() {
         <section className="rounded-[32px] border border-slate-800 bg-slate-950/55 p-6 shadow-[0_24px_70px_rgba(2,6,23,0.26)] sm:p-8">
           <div className="mb-8 flex items-center gap-3">
             <BrandLogo />
-            <p className="font-display text-xl font-semibold tracking-[-0.04em] text-slate-100">MedEquip</p>
+            <p className="font-display text-xl font-semibold tracking-[-0.04em] text-slate-100">VitalOps</p>
           </div>
 
           {error && (
@@ -78,9 +83,10 @@ export default function AdminLogin() {
             </div>
           )}
 
-          <div className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             {providers?.google && (
               <button
+                type="button"
                 onClick={() => signIn('google', { callbackUrl: '/admin' })}
                 className="w-full rounded-xl border border-slate-700 bg-transparent py-3 font-semibold text-slate-100 transition hover:border-slate-500 hover:bg-slate-900/60"
               >
@@ -90,34 +96,40 @@ export default function AdminLogin() {
             <div>
               <label className="mb-2 block text-sm text-slate-400">Admin Email</label>
               <input
+                name="email"
                 type="email"
                 placeholder="supplier@company.com"
+                autoComplete="email"
                 className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
             <div>
               <label className="mb-2 block text-sm text-slate-400">Password</label>
               <input
+                name="password"
                 type="password"
                 placeholder="Enter your password"
+                autoComplete="current-password"
                 className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               />
             </div>
 
             <button
-              onClick={handleSubmit}
+              type="submit"
               disabled={loading}
               className="mt-2 w-full rounded-xl bg-slate-100 py-3 font-semibold text-slate-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-70"
             >
               {loading ? 'Signing in...' : 'Enter Admin Dashboard'}
             </button>
-          </div>
+          </form>
 
           <div className="mt-8 space-y-3 text-sm">
+            <p className="text-slate-400">
+              Need supplier access?{' '}
+              <button onClick={() => router.push('/admin/signup')} className="text-slate-100 transition hover:text-white">
+                Create supplier account
+              </button>
+            </p>
             <p className="text-slate-400">
               Customer account?{' '}
               <button onClick={() => router.push('/login')} className="text-slate-100 transition hover:text-white">

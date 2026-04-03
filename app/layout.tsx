@@ -21,7 +21,7 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "MedEquip",
+  title: "VitalOps - Medical Equipment Operations Platform",
   description: "Medical equipment procurement and supplier management",
 };
 

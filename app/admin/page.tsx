@@ -60,11 +60,20 @@ interface ProductRequest {
   urgency: string
   status: string
   created_at: string
+  assigned_to: number | null
+  claimed_at: string | null
+  resolved_at: string | null
   user: {
     name: string
     email: string
     hospital_name: string | null
   }
+  assignedAdmin: {
+    id: number
+    name: string | null
+    email: string
+    hospital_name: string | null
+  } | null
 }
 
 const categories = ['Surgical Instruments', 'Diagnostic Equipment', 'Orthopedic Implants', 'ICU Equipment']
@@ -81,6 +90,12 @@ const urgencyColor: Record<string, string> = {
   normal: 'bg-blue-500/12 text-blue-200 border-blue-500/20',
 }
 
+const requestStatusColor: Record<string, string> = {
+  pending: 'bg-slate-800 text-slate-300 border-slate-700',
+  claimed: 'bg-cyan-500/12 text-cyan-200 border-cyan-500/20',
+  fulfilled: 'bg-emerald-500/12 text-emerald-200 border-emerald-500/20',
+}
+
 const notificationBadge: Record<string, string> = {
   order: 'OR',
   request: 'RQ',
@@ -91,11 +106,13 @@ const notificationBadge: Record<string, string> = {
 export default function Admin() {
   const router = useRouter()
   const [tab, setTab] = useState<'products' | 'orders' | 'requests'>('products')
+  const [currentAdminId, setCurrentAdminId] = useState<number | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [requests, setRequests] = useState<ProductRequest[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
+  const [requestActionLoading, setRequestActionLoading] = useState<number | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -123,6 +140,11 @@ export default function Admin() {
       .then((response) => (response.ok ? response.json() : []))
       .then((data) => setRequests(Array.isArray(data) ? data : []))
       .catch(() => setRequests([]))
+
+    fetch('/api/profile', { cache: 'no-store' })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => setCurrentAdminId(typeof data?.id === 'number' ? data.id : null))
+      .catch(() => setCurrentAdminId(null))
 
     fetch('/api/notifications', { cache: 'no-store' })
       .then((response) => (response.ok ? response.json() : []))
@@ -198,12 +220,33 @@ export default function Admin() {
     setOrders(orders.filter((order) => order.id !== orderId))
   }
 
+  const updateRequestStatus = async (requestId: number, action: 'claim' | 'release' | 'fulfill') => {
+    setRequestActionLoading(requestId)
+    const response = await fetch('/api/requests', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requestId, action })
+    })
+
+    const data = await response.json()
+    setRequestActionLoading(null)
+
+    if (!response.ok) {
+      window.alert(data.error || 'Unable to update request')
+      return
+    }
+
+    setRequests((currentRequests) =>
+      currentRequests.map((request) => (request.id === requestId ? data : request))
+    )
+  }
+
   return (
     <main className="app-shell min-h-screen text-slate-100" suppressHydrationWarning>
       <nav className="sticky top-0 z-50 flex flex-col gap-3 border-b border-white/10 bg-[#0b1623]/90 px-4 py-4 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between md:px-8">
         <div className="flex items-center gap-3">
           <BrandLogo size='sm' />
-          <p className="font-display text-xl font-semibold tracking-[-0.04em] text-slate-100">MedEquip Supplier Desk</p>
+          <p className="font-display text-xl font-semibold tracking-[-0.04em] text-slate-100">VitalOps Supplier Desk</p>
         </div>
 
         <div className="flex items-center gap-3 self-end sm:self-auto">
@@ -572,6 +615,12 @@ export default function Admin() {
             ) : (
               requests.map((request) => (
                 <div key={request.id} className="rounded-[28px] border border-slate-800 bg-slate-950/40 p-6">
+                  {(() => {
+                    const isOwnedByCurrentAdmin = request.assigned_to === currentAdminId
+                    const isUnclaimed = !request.assigned_to
+
+                    return (
+                      <>
                   <div className="flex flex-col items-start justify-between gap-3 md:flex-row">
                     <div className="flex-1">
                       <p className="text-lg font-semibold text-white">{request.name}</p>
@@ -579,6 +628,20 @@ export default function Admin() {
                       <p className="mt-3 text-xs text-slate-500">
                         {request.user.name} · {request.user.hospital_name || request.user.email} · Qty: {request.quantity}
                       </p>
+                      {request.assignedAdmin ? (
+                        <p className="mt-2 text-xs text-slate-400">
+                          Assigned to {request.assignedAdmin.name || request.assignedAdmin.email}
+                          {request.claimed_at
+                            ? ` · Claimed ${new Date(request.claimed_at).toLocaleDateString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                              })}`
+                            : ''}
+                        </p>
+                      ) : (
+                        <p className="mt-2 text-xs text-slate-500">Unclaimed request</p>
+                      )}
                       <p className="mt-1 text-xs text-slate-500">
                         {new Date(request.created_at).toLocaleDateString('en-IN', {
                           day: 'numeric',
@@ -587,10 +650,54 @@ export default function Admin() {
                         })}
                       </p>
                     </div>
-                    <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium ${urgencyColor[request.urgency] || 'bg-slate-800 text-slate-300 border-slate-700'}`}>
-                      {request.urgency.charAt(0).toUpperCase() + request.urgency.slice(1)} Priority
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium ${urgencyColor[request.urgency] || 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                        {request.urgency.charAt(0).toUpperCase() + request.urgency.slice(1)} Priority
+                      </span>
+                      <span className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium ${requestStatusColor[request.status] || requestStatusColor.pending}`}>
+                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                      </span>
+                    </div>
                   </div>
+
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {isUnclaimed ? (
+                      <button
+                        onClick={() => updateRequestStatus(request.id, 'claim')}
+                        disabled={requestActionLoading === request.id}
+                        className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-200 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        {requestActionLoading === request.id ? 'Claiming...' : 'Claim Request'}
+                      </button>
+                    ) : null}
+
+                    {isOwnedByCurrentAdmin ? (
+                      <>
+                        <button
+                          onClick={() => updateRequestStatus(request.id, 'release')}
+                          disabled={requestActionLoading === request.id}
+                          className="rounded-lg border border-slate-700 bg-[#09111a] px-4 py-2 text-sm font-medium text-slate-300 transition hover:border-slate-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          {requestActionLoading === request.id ? 'Updating...' : 'Release'}
+                        </button>
+                        {request.status !== 'fulfilled' ? (
+                          <button
+                            onClick={() => updateRequestStatus(request.id, 'fulfill')}
+                            disabled={requestActionLoading === request.id}
+                            className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-200 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-70"
+                          >
+                            {requestActionLoading === request.id ? 'Updating...' : 'Mark Fulfilled'}
+                          </button>
+                        ) : null}
+                      </>
+                    ) : null}
+                    {request.assigned_to && !isOwnedByCurrentAdmin ? (
+                      <p className="text-sm text-slate-500">Only the assigned supplier can update this request.</p>
+                    ) : null}
+                  </div>
+                      </>
+                    )
+                  })()}
                 </div>
               ))
             )}

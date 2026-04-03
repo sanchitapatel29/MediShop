@@ -27,6 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         portal: { label: 'Portal', type: 'text' }
       },
       async authorize(credentials) {
+        console.error('Credentials authorize payload:', credentials)
         const email = credentials?.email?.toString().trim().toLowerCase()
         const password = credentials?.password?.toString()
         const portal = credentials?.portal?.toString() === 'admin' ? 'admin' : 'doctor'

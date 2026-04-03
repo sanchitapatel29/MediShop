@@ -1,0 +1,2 @@
+-- This migration intentionally does not change the database schema.
+-- Product details and reviews are stored in JSON files under /data.
