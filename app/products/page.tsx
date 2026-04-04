@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { BrandLogo } from "../brand-logo";
 
 interface Product {
@@ -14,6 +15,9 @@ interface Product {
   stock: number;
   certification: string | null;
   imageUrls?: string[];
+  is_quote_enabled?: boolean;
+  min_quote_quantity?: number | null;
+  starting_quote_price?: number | null;
 }
 
 interface CartItem extends Product {
@@ -22,6 +26,7 @@ interface CartItem extends Product {
 
 export default function Products() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -102,6 +107,12 @@ export default function Products() {
           </div>
 
           <div className="flex items-center gap-2 md:gap-3">
+            <button
+              onClick={() => router.push(session?.user?.role === "admin" ? "/admin/quotes" : "/quotes")}
+              className="hidden rounded-xl border border-slate-800 bg-slate-950/55 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-700 hover:text-white md:block"
+            >
+              {session?.user?.role === "admin" ? "Quote Desk" : "My Quotes"}
+            </button>
             <button
               onClick={() => router.push("/orders")}
               className="hidden rounded-xl border border-slate-800 bg-slate-950/55 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-700 hover:text-white md:block"

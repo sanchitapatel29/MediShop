@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 interface Review {
   id: string;
@@ -23,6 +24,9 @@ interface ProductDetail {
   price: number;
   stock: number;
   created_at: string;
+  is_quote_enabled: boolean;
+  min_quote_quantity: number | null;
+  starting_quote_price: number | null;
   detailedDescription: string;
   imageUrls: string[];
   admin: {
@@ -47,6 +51,7 @@ interface CartItem {
 export default function ProductDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const { data: session } = useSession();
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -54,6 +59,11 @@ export default function ProductDetailPage() {
   const [rating, setRating] = useState(5);
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [quoteQuantity, setQuoteQuantity] = useState("1");
+  const [quotePrice, setQuotePrice] = useState("");
+  const [quoteMessage, setQuoteMessage] = useState("");
+  const [quoteSubmitting, setQuoteSubmitting] = useState(false);
 
   useEffect(() => {
     if (!params?.id) return;
@@ -77,6 +87,10 @@ export default function ProductDetailPage() {
       product.reviews.length
     );
   }, [product]);
+
+  const canRequestQuote = session?.user?.role !== "admin";
+  const minimumQuoteQuantity = product?.min_quote_quantity ?? 1;
+  const quoteAvailable = Boolean(product?.is_quote_enabled && canRequestQuote);
 
   const addToCart = () => {
     if (!product) return;
@@ -156,6 +170,55 @@ export default function ProductDetailPage() {
     }
   };
 
+  const submitQuoteRequest = async () => {
+    if (!product) return;
+
+    const numericQuantity = Number(quoteQuantity);
+    if (!Number.isInteger(numericQuantity) || numericQuantity < minimumQuoteQuantity) {
+      setMessage(`Minimum quote quantity for this product is ${minimumQuoteQuantity}`);
+      return;
+    }
+
+    setQuoteSubmitting(true);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/quotes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          quantity: quoteQuantity,
+          price: quotePrice,
+          message: quoteMessage,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.status === 401) {
+        router.push("/login");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to request quote");
+      }
+
+      setQuoteModalOpen(false);
+      setQuoteQuantity("1");
+      setQuotePrice("");
+      setQuoteMessage("");
+      router.push(`/quotes/${data.id}`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to request quote");
+    } finally {
+      setQuoteSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <main className="app-shell flex min-h-screen items-center justify-center text-slate-100">
@@ -186,6 +249,63 @@ export default function ProductDetailPage() {
 
   return (
     <main className="app-shell min-h-screen text-slate-100">
+      {quoteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm">
+          <div className="w-full max-w-xl rounded-[32px] border border-slate-800 bg-[#08111b] p-6 shadow-[0_28px_90px_rgba(2,6,23,0.38)]">
+            <div className="flex items-start justify-between gap-4 border-b border-white/8 pb-4">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.28em] text-slate-500">Quote Request</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight">Request pricing for {product?.name}</h2>
+              </div>
+              <button
+                onClick={() => setQuoteModalOpen(false)}
+                className="rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-sm text-slate-300 transition hover:border-slate-700 hover:text-white"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <input
+                type="number"
+                min={minimumQuoteQuantity}
+                value={quoteQuantity}
+                onChange={(event) => setQuoteQuantity(event.target.value)}
+                placeholder={`Quantity (min ${minimumQuoteQuantity})`}
+                className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 focus:border-slate-600 focus:outline-none"
+              />
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={quotePrice}
+                onChange={(event) => setQuotePrice(event.target.value)}
+                placeholder={
+                  typeof product?.starting_quote_price === "number"
+                    ? `Optional target unit price (supplier starts near Rs ${product.starting_quote_price.toLocaleString()})`
+                    : "Optional target unit price"
+                }
+                className="w-full rounded-xl border border-slate-800 bg-[#09111a] px-4 py-3 text-slate-100 placeholder-slate-500 focus:border-slate-600 focus:outline-none"
+              />
+              <textarea
+                rows={5}
+                value={quoteMessage}
+                onChange={(event) => setQuoteMessage(event.target.value)}
+                placeholder="Share procurement notes, timelines, or price expectations"
+                className="w-full rounded-2xl border border-slate-800 bg-[#09111a] px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:border-slate-600 focus:outline-none"
+              />
+              <button
+                onClick={submitQuoteRequest}
+                disabled={quoteSubmitting}
+                className="w-full rounded-xl bg-slate-100 py-3 font-semibold text-slate-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {quoteSubmitting ? "Submitting..." : "Send Quote Request"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <nav className="border-b border-white/10 bg-[#0b1623]/90 px-4 py-4 backdrop-blur-xl md:px-8">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
@@ -305,9 +425,21 @@ export default function ProductDetailPage() {
                 <div className="mt-8 border-t border-white/8 pt-6">
                   <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Purchase</p>
                   <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
-                  Add this instrument to your cart and continue with institutional checkout.
+                    Add this instrument to your cart, or request a quote first if you need negotiated pricing.
                   </p>
-                  <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                  {quoteAvailable ? (
+                    <div className="mt-4 rounded-2xl border border-cyan-500/15 bg-cyan-500/8 px-4 py-4 text-sm text-cyan-100">
+                      Quote requests are enabled for bulk buying from quantity {minimumQuoteQuantity}.
+                      {typeof product.starting_quote_price === "number"
+                        ? ` Supplier starting quote: Rs ${product.starting_quote_price.toLocaleString()}.`
+                        : ""}
+                    </div>
+                  ) : (
+                    <div className="mt-4 rounded-2xl border border-slate-800 bg-[#09111a] px-4 py-4 text-sm text-slate-400">
+                      This product is currently sold at the listed price only. Quote negotiation is not enabled.
+                    </div>
+                  )}
+                  <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                     <button
                       onClick={addToCart}
                       disabled={product.stock <= 0}
@@ -315,6 +447,17 @@ export default function ProductDetailPage() {
                     >
                       {product.stock <= 0 ? "Out of Stock" : "Add to Cart"}
                     </button>
+                    {quoteAvailable && (
+                      <button
+                        onClick={() => {
+                          setQuoteQuantity(String(minimumQuoteQuantity));
+                          setQuoteModalOpen(true);
+                        }}
+                        className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-6 py-3 text-sm font-medium text-cyan-200 transition hover:bg-cyan-500/20"
+                      >
+                        Request Quote
+                      </button>
+                    )}
                     <button
                       onClick={() => router.push("/cart")}
                       className="rounded-xl border border-slate-700 px-6 py-3 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-slate-900/60"

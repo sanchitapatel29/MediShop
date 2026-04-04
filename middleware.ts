@@ -9,7 +9,8 @@ export default auth((request) => {
   const isAdminSignup = pathname === '/admin/signup'
   const isCustomerLoginRoute = pathname === '/login'
   const isCustomerSignupRoute = pathname === '/signup'
-  const isCustomerProtectedRoute = ['/profile', '/orders', '/request', '/cart'].includes(pathname)
+  const isQuotesRoute = pathname === '/quotes' || pathname.startsWith('/quotes/')
+  const isCustomerProtectedRoute = ['/profile', '/orders', '/request', '/cart'].includes(pathname) || isQuotesRoute
 
   if (pathname.startsWith('/admin')) {
     if (!isLoggedIn && !isAdminLogin && !isAdminSignup) {
@@ -49,5 +50,5 @@ export default auth((request) => {
 })
 
 export const config = {
-  matcher: ['/admin/:path*', '/login', '/signup', '/profile', '/orders', '/request', '/cart']
+  matcher: ['/admin/:path*', '/login', '/signup', '/profile', '/orders', '/request', '/cart', '/quotes/:path*']
 }

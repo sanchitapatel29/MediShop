@@ -21,20 +21,27 @@ model User {
   products        Product[]
   productRequests ProductRequest[]
   assignedRequests ProductRequest[] @relation("AssignedProductRequests")
+  buyerQuotes      QuoteRequest[]   @relation("BuyerQuotes")
+  supplierQuotes   QuoteRequest[]   @relation("SupplierQuotes")
+  quoteMessages    QuoteMessage[]
 }
 
 model Product {
-  id            Int         @id @default(autoincrement())
-  name          String
-  category      String
-  description   String
-  price         Float
-  stock         Int
-  certification String?
-  created_at    DateTime    @default(now())
-  added_by      Int?
-  orderItems    OrderItem[]
-  admin         User?       @relation(fields: [added_by], references: [id])
+  id                  Int         @id @default(autoincrement())
+  name                String
+  category            String
+  description         String
+  price               Float
+  stock               Int
+  certification       String?
+  is_quote_enabled    Boolean     @default(false)
+  min_quote_quantity  Int?
+  starting_quote_price Float?
+  created_at          DateTime    @default(now())
+  added_by            Int?
+  orderItems          OrderItem[]
+  quoteRequests       QuoteRequest[]
+  admin               User?       @relation(fields: [added_by], references: [id])
 }
 
 model Order {
@@ -84,4 +91,38 @@ model Notification {
   is_read    Boolean  @default(false)
   created_at DateTime @default(now())
   user       User     @relation(fields: [user_id], references: [id])
+}
+
+model QuoteRequest {
+  id         String         @id @default(cuid())
+  productId  Int
+  buyerId    Int
+  supplierId Int
+  quantity   Int
+  status     QuoteStatus    @default(PENDING)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  product    Product        @relation(fields: [productId], references: [id])
+  buyer      User           @relation("BuyerQuotes", fields: [buyerId], references: [id])
+  supplier   User           @relation("SupplierQuotes", fields: [supplierId], references: [id])
+  messages   QuoteMessage[]
+}
+
+model QuoteMessage {
+  id        String       @id @default(cuid())
+  quoteId   String
+  senderId  Int
+  message   String?
+  price     Float?
+  createdAt DateTime     @default(now())
+  quote     QuoteRequest @relation(fields: [quoteId], references: [id])
+  sender    User         @relation(fields: [senderId], references: [id])
+}
+
+enum QuoteStatus {
+  PENDING
+  NEGOTIATING
+  ACCEPTED
+  REJECTED
+  EXPIRED
 }

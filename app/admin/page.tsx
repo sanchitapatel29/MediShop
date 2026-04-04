@@ -9,6 +9,9 @@ interface Product {
   category: string
   price: number
   stock: number
+  is_quote_enabled?: boolean
+  min_quote_quantity?: number | null
+  starting_quote_price?: number | null
 }
 
 interface OrderItem {
@@ -121,7 +124,10 @@ export default function Admin() {
     imageUrlsText: '',
     price: '',
     stock: '',
-    certification: ''
+    certification: '',
+    isQuoteEnabled: false,
+    minQuoteQuantity: '',
+    startingQuotePrice: ''
   })
   const [message, setMessage] = useState('')
 
@@ -184,7 +190,10 @@ export default function Admin() {
         imageUrlsText: '',
         price: '',
         stock: '',
-        certification: ''
+        certification: '',
+        isQuoteEnabled: false,
+        minQuoteQuantity: '',
+        startingQuotePrice: ''
       })
 
       fetch('/api/products?myProducts=true')
@@ -314,6 +323,13 @@ export default function Admin() {
             title="Profile"
           >
             PF
+          </button>
+
+          <button
+            onClick={() => router.push('/admin/quotes')}
+            className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-2 text-sm text-slate-300 transition hover:border-slate-700 hover:text-white"
+          >
+            Quote Desk
           </button>
 
           <button
@@ -456,6 +472,54 @@ export default function Admin() {
                   value={formData.imageUrlsText}
                   onChange={(event) => setFormData({ ...formData, imageUrlsText: event.target.value })}
                 />
+                <div className="rounded-2xl border border-slate-800 bg-[#09111a] p-4">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-100">Enable quote negotiation</p>
+                      <p className="mt-1 text-sm text-slate-400">
+                        Use quotes only for products where suppliers want controlled bulk-price discussions.
+                      </p>
+                    </div>
+                    <label className="inline-flex items-center gap-3 text-sm text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={formData.isQuoteEnabled}
+                        onChange={(event) =>
+                          setFormData({
+                            ...formData,
+                            isQuoteEnabled: event.target.checked,
+                            minQuoteQuantity: event.target.checked ? formData.minQuoteQuantity : '',
+                            startingQuotePrice: event.target.checked ? formData.startingQuotePrice : ''
+                          })
+                        }
+                        className="h-4 w-4 rounded border-slate-700 bg-slate-950 text-cyan-300 focus:ring-cyan-300"
+                      />
+                      Quotes enabled
+                    </label>
+                  </div>
+
+                  {formData.isQuoteEnabled && (
+                    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="Minimum quote quantity"
+                        className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
+                        value={formData.minQuoteQuantity}
+                        onChange={(event) => setFormData({ ...formData, minQuoteQuantity: event.target.value })}
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="Starting quote price (optional)"
+                        className="w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-slate-600 focus:outline-none"
+                        value={formData.startingQuotePrice}
+                        onChange={(event) => setFormData({ ...formData, startingQuotePrice: event.target.value })}
+                      />
+                    </div>
+                  )}
+                </div>
                 <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
                   <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Submission</p>
                   <p className="mt-2 text-sm text-slate-400">
@@ -483,6 +547,11 @@ export default function Admin() {
                         <p className="font-medium text-slate-100">{product.name}</p>
                         <p className="mt-0.5 text-xs text-slate-500">
                           {product.category} · ₹{product.price.toLocaleString()} · {product.stock <= 0 ? 'Out of stock' : `${product.stock} in stock`}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {product.is_quote_enabled
+                            ? `Quotes enabled from qty ${product.min_quote_quantity ?? 1}${typeof product.starting_quote_price === 'number' ? ` · Starts near Rs ${product.starting_quote_price.toLocaleString()}` : ''}`
+                            : 'Quotes disabled'}
                         </p>
                       </div>
                       <button
